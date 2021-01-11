@@ -15,10 +15,10 @@
         ((predicate? (car items)) 0)
         (else (+ 1 (find-index-of-list (cdr items) predicate?)))))
 
-(define (list-length items)
+(define (length-of-list items)
   (if (null? items)
       0
-      (+ 1 (list-length (cdr items)))))
+      (+ 1 (length-of-list (cdr items)))))
 
 (define (ref-list items n)
   (cond ((null? items) '())
@@ -45,6 +45,122 @@
   (if (null? l1)
       l2
       (cons (car l1) (append-list (cdr l1) l2))))
+
+;;; string->list list->string
+;;; string-ref string-length string-append
+
+;;; processes 和 procedures
+;;; 计算机里的精灵和咒语
+
+;;; techniques for controlling the complexity of these large systems
+;;; 1. black-box abstraction
+;;; 2. conventional interfaces
+;;; 3. metaliguistic abstraction
+
+;;; 当别人向你展示一门语言时, 你首先要问的是:
+;;; 1. what is primitive elements ?
+;;; 2. what is means of combination ?
+;;; 3. what is means of abstraction ?
+
+;;; combination (+ 3 17.9 5)
+;;;   operator +
+;;;   operands 3 17.9 5
+;;; combination 可以作为其他 combination 的 operands 或者 operator
+;;; operator 在最左边 --- prefix notation
+;;; 一个 combination 等价于一颗 tree
+;;; (+ 3 (* 5 6) 8 2) --> 43
+;;;     +
+;;;     3
+;;;     (* 5 6) --> 30
+;;;         *
+;;;         5
+;;;         6
+;;;     8
+;;;     2
+
+;;; define 可以给一个值取一个名字 (组合式等价于值)
+;;; (define a (* 5 5))
+;;; (* a a) --> 625
+;;; (define b (+ a (* 5 a)))
+
+;;; 表示 (* 5 5) (* 1001 1001) (* 6 6) (* 1001.7 1001.7)
+;;; (define (square x)          (* x x))
+;;;   to    square something is mutiply it by itself
+;;; (define square (lambda (x) (* x x)))
+;;;         square 表示   一个数 和它自身相乘
+;;; lambda 构造一个 procedure, procedure 分 arguments 和 body 两个部分
+
+;;; ---- syntactic sugar
+;;; 两种等价写法, 一种比另一种更好写而已.
+
+;;; ----- 海伦法求平方根 -----
+
+(define (square x) (* x x))
+
+(define (abs x) ((if (> x 0) + -) x))
+
+(define (average . numbers)
+  (define (sum-of-list items) (accumulate-list + 0 items))
+  (/ (sum-of-list numbers) (length-of-list numbers)))
+
+(define (sqrt x)
+  (define (good-enough? g)
+    (< (abs (- (square g) x)) 0.00001))
+  (define (improve g)
+    (average (/ x g) g))
+  (define (try g)
+    (if (good-enough? g)
+        g
+        (try (improve g))))
+  (try 1.0))
+
+; (display-newline (sqrt (square 3)))
+
+;;; *** black-box ***
+;;; sqrt
+;;;     -> try (-> try itself)
+;;;         -> good-enough?
+;;;             -> abs
+;;;             -> square
+;;;         -> improve
+;;;             -> average
+
+;;; recursive definition
+
+;;; block structure (from ALGOL 60)
+;;; this particular way of packaging internals inside of a definition
+;;; 有两个特点:
+;;; 1. 过程内部可以定义过程, 内部过程的名字被限制在定义中
+;;; 2. 内部过程里面可以访问外部过程中的其他定义 -- 词法作用域
+
+;;; lisp
+;;; ----------------------------------------------
+;;;                      | procedures |  data
+;;; primitive elements   | + * < =    | 23 1.738
+;;; means of combination | () cond if
+;;; means of abstraction | define
+;;; ----------------------------------------------
+
+;;; ----- 利用不动点思想求平方根 -----
+
+(define (fixed-point f start)
+  (define (close-enough? x y)
+    (< (abs (- x y)) 0.00001))
+  (define (next g) (f g))
+  (define (guess g)
+    (if (close-enough? g (next g))
+        (next g)
+        (guess (next g))))
+  (guess start))
+
+(define (average-damp f)
+  (lambda (x) (average (f x) x)))
+
+(define (sqrt x)
+  (fixed-point (average-damp (lambda (y) (/ x y))) 1.0))
+
+; (display-newline (sqrt (square 3)))
+
 
 ;;; -------------------------- TODO --------------------------------
 
