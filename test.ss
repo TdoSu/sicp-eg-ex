@@ -161,6 +161,81 @@
 
 ; (display-newline (sqrt (square 3)))
 
+;;; kinds of expressions
+;;; ------------------------------------
+;;; numbers
+;;; symbols
+;;; lambda expressions  -- special forms
+;;; definitions         -- special forms
+;;; conditionals        -- special forms
+;;; conbinations
+
+;;; substitution rule - to evaluate an application
+;;; ------------------------------------------------
+;;; 1. evaluate the operator to get procedure
+;;; 2. evaluate the operands to get arguments
+;;; 3. apply the procedure to the arguments
+;;;   copy the body of the procedure,
+;;;   substituting the arguments supplied
+;;;   for the formal parameters of the procedure.
+;;;   Evaluate the resulting new body.
+
+(define (sum-of-squares x y) (+ (square x) (square y)))
+
+;;; (sum-of-squares 3 4)
+;;; ((lambda (x y) (+ (square x) (square y))) 3 4)
+;;; (+ (square 3) (square 4))
+;;; (+ (square 3) ((lambda (x) (* x x)) 4))
+;;; (+ (square 3) (* 4 4))
+;;; (+ (square 3) 16)
+;;; (+ ((lambda (x) (* x x)) 3) 16)
+;;; (+ (* 3 3) 16)
+;;; (+ 9 16)
+;;; 25
+
+;;; (IF <predicate> <consequent> <alternative>)
+;;; to evaluate an IF expression
+;;; -----------------------------
+;;; Evaluate the predicate expression
+;;; if it yields TRUE
+;;;   evaluate the consequent expression
+;;; otherwise
+;;;   evaluate the alternative expression
+
+(define (inc x) (+ x 1))
+(define (dec x) (- x 1))
+
+;;; 迭代实现
+(define (add-integer x y)
+  (if (= x 0)
+      y
+      (add-integer (dec x) (inc y))))
+
+; (display-newline (add-integer 3 4))
+
+;;; (add-integer 3 4)
+;;; (add-integer 2 5)
+;;; (add-integer 1 6)
+;;; (add-integer 0 7)
+;;; 7
+
+;;; 递归实现
+(define (add-integer x y)
+  (if (= x 0)
+      y
+      (inc (add-integer (dec x) y))))
+
+; (display-newline (add-integer 3 4))
+
+;;; (add-integer 3 4)
+;;; (inc (add-integer 2 4))
+;;; (inc (inc (add-integer 1 4)))
+;;; (inc (inc (inc (add-integer 0 4))))
+;;; (inc (inc (inc 4)))
+;;; (inc (inc 5))
+;;; (inc 6)
+;;; 7
+
 
 ;;; -------------------------- TODO --------------------------------
 
