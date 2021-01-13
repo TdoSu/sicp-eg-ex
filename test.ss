@@ -49,6 +49,8 @@
 ;;; string->list list->string
 ;;; string-ref string-length string-append
 
+;;; -----------------------------------------------------------
+
 ;;; processes 和 procedures
 ;;; 计算机里的精灵和咒语
 
@@ -236,6 +238,60 @@
 ;;; (inc 6)
 ;;; 7
 
+;;; 斐波那契数 - 递归计算过程
+(define (fib n)
+  (if (< n 2)
+      n
+      (+ (fib (- n 1)) (fib (- n 2)))))
+
+;;; 斐波那契数 - 迭代计算过程
+(define (fib n)
+  (define (iter a b counter)
+    (if (= counter n)
+        a
+        (iter b (+ a b) (+ counter 1))))
+  (iter 0 1 0))
+
+; (display-newline (fib 1))
+; (display-newline (fib 2))
+; (display-newline (fib 3))
+; (display-newline (fib 4))
+; (display-newline (fib 5))
+; (display-newline (fib 6))
+
+;;; 汉诺塔
+(define (move n from to spare)
+  (define (print-move from to)
+    (display-newline from "-" to))
+  (cond ((= n 0) "DONE")
+        (else
+          (move (- n 1) from spare to)
+          (print-move from to)
+          (move (- n 1) spare to from))))
+
+; (move 4 'from 'to 'spare)
+
+;;; 对于求和过程的抽象 -- 过程作为参数
+
+(define (sum term start next end)
+  (if (> start end)
+      0
+      (+ (term start) (sum term (next start) next end))))
+
+(define (sum-integer start end)
+  (sum (lambda (x) x) start (lambda (x) (+ x 1)) end))
+; (display-newline (sum-integer 1 100))
+
+(define (sum-squares start end)
+  (sum square start (lambda (x) (+ x 1)) end))
+; (display-newline (sum-squares 1 4))
+
+(define (pi-sum start end)
+  (sum (lambda (x) (/ 1.0 (* x (+ x 2))))
+       start
+       (lambda (x) (+ x 4))
+       end))
+; (display-newline (* 8 (pi-sum 1 100000)))
 
 ;;; -------------------------- TODO --------------------------------
 
