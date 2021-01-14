@@ -143,26 +143,6 @@
 ;;; means of abstraction | define
 ;;; ----------------------------------------------
 
-;;; ----- 利用不动点思想求平方根 -----
-
-(define (fixed-point f start)
-  (define (close-enough? x y)
-    (< (abs (- x y)) 0.00001))
-  (define (next g) (f g))
-  (define (guess g)
-    (if (close-enough? g (next g))
-        (next g)
-        (guess (next g))))
-  (guess start))
-
-(define (average-damp f)
-  (lambda (x) (average (f x) x)))
-
-(define (sqrt x)
-  (fixed-point (average-damp (lambda (y) (/ x y))) 1.0))
-
-; (display-newline (sqrt (square 3)))
-
 ;;; kinds of expressions
 ;;; ------------------------------------
 ;;; numbers
@@ -292,6 +272,55 @@
        (lambda (x) (+ x 4))
        end))
 ; (display-newline (* 8 (pi-sum 1 100000)))
+
+;;; ----- 利用不动点思想求平方根 (过程作为返回值) -----
+;;; improve 我们的改进函数其实就是要找的不动点函数,
+;;; 当不需要再改进时, 其实就是不动点,
+;;; 这就是不动点和 try-improve-good-enoughe 之间的关系.
+
+(define (fixed-point f start)
+  (define (close-enough? x y)
+    (< (abs (- x y)) 0.00001))
+  (define (next g) (f g))
+  (define (guess g)
+    (if (close-enough? g (next g))
+        (next g)
+        (guess (next g))))
+  (guess start))
+
+(define (average-damp f)
+  (lambda (x) (average (f x) x)))
+
+(define (sqrt x)
+  (fixed-point (average-damp (lambda (y) (/ x y))) 1.0))
+
+; (display-newline (sqrt (square 3)))
+
+; (display-newline (fixed-point cos 1.0))
+;;; -> 0.7390822985224024
+
+;;; ------ 利用牛顿法求平方根 (过程作为返回值) -------
+
+(define (newtown-method f guess)
+  (define dx 0.000001)
+  (define (deriv f)
+      (lambda (x) (/ (- (f (+ x dx)) (f x))dx)))
+  (define df (deriv f))
+  (fixed-point
+    (lambda (x) (- x (/ (f x) (df x))))
+    1.0))
+
+(define (sqrt x)
+  (newtown-method (lambda (y) (- (square y) x)) 1.0))
+
+; (display-newline (sqrt (square 3)))
+
+;;; the rights and privileges of first-class citizens
+;;; To be named by variable.
+;;; To be passed as arguments to procedures.
+;;; To be returned as values of procedures.
+;;; To be incorporated into data structures.
+
 
 ;;; -------------------------- TODO --------------------------------
 
