@@ -358,6 +358,55 @@
 ; (print-rat (*rat (make-rat 3 4) (make-rat 2 5)))
 ; (newline)
 
+;;; 实现点和直线
+
+(define (make-point x y) (cons x y))
+(define (x-point z) (car z))
+(define (y-point z) (cdr z))
+(define (print-point z)
+  (begin (display "(")
+         (display (x-point z))
+         (display ", ")
+         (display (y-point z))
+         (display ")")))
+
+(define (make-segment start end) (cons start end))
+(define (start-segment s) (car s))
+(define (end-segment s) (cdr s))
+(define (print-segment s)
+  (begin (print-point (start-segment s))
+         (display "--")
+         (print-point (end-segment s))))
+(define (midpoint-segment s)
+  (let ((start (start-segment s))
+        (end (end-segment s)))
+    (let ((x1 (x-point start))
+          (y1 (y-point start))
+          (x2 (x-point end))
+          (y2 (y-point end)))
+      (make-point (/ (+ x1 x2) 2)
+                  (/ (+ y1 y2) 2)))))
+(define (distance p1 p2)
+  (let ((x1 (x-point p1))
+        (y1 (y-point p1))
+        (x2 (x-point p2))
+        (y2 (y-point p2)))
+    (sqrt (+ (square (- x1 x2)) (square (- y1 y2))))))
+(define (length-of-segment s)
+  (distance (start-segment s) (end-segment s)))
+
+; (print-point (make-point 3 5))
+; (newline)
+; (print-segment (make-segment (make-point 3 5) (make-point 1 2)))
+; (newline)
+; (print-point (midpoint-segment
+;                (make-segment (make-point 3 5) (make-point 1 2))))
+; (newline)
+; (display-newline (distance (make-point 3 4) (make-point 0 0)))
+; (display-newline (length-of-segment
+;                    (make-segment (make-point 3 4)
+;                                  (make-point 0 0))))
+
 
 
 ;;; -------------------------- TODO --------------------------------
