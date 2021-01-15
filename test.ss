@@ -407,6 +407,19 @@
 ;                    (make-segment (make-point 3 4)
 ;                                  (make-point 0 0))))
 
+;;; ----- pairs -----
+;;; constructor: cons    selector: car, cdr
+;;; box and pointer notation
+;;; For any x and y, (car (cons x y)) is x, (cdr (cons x y)) is y.
+
+;;; 数据抽象就是把数据的使用和数据的实现分开.
+;;; 实现这种分开的方法就是用 constructor 和 selector 构建一层屏障.
+
+;;; *** WISHFUL THINKING ***
+;;; --- 按愿望思考 (假设我们已经有了...)
+;;; 然后我们可以给假设已经有了的东西取个名字代替真实的实现进行思考.
+
+
 
 
 ;;; -------------------------- TODO --------------------------------
