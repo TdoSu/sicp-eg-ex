@@ -321,6 +321,44 @@
 ;;; To be returned as values of procedures.
 ;;; To be incorporated into data structures.
 
+;;; ------- 实现有理数运算  -----------
+
+(define (gcd a b)
+  (if (= a 0)
+      b
+      (gcd (remainder b a) a)))
+
+; (display-newline (gcd 20 15))
+; (display-newline (gcd 17 15))
+
+;;; ---- constructor ----
+(define (make-rat n d)
+  (let ((g (gcd n d)))
+    (cons (/ n g) (/ d g))))
+;;; ---- selectors ----
+(define (numer r) (car r))
+(define (denom r) (cdr r))
+
+(define (+rat r1 r2)
+  (make-rat (+ (* (numer r1) (denom r2))
+               (* (numer r2) (denom r1)))
+            (* (denom r1) (denom r2))))
+
+(define (*rat r1 r2)
+  (make-rat (* (numer r1) (numer r2))
+            (* (denom r1) (denom r2))))
+
+(define (print-rat r)
+  (begin (display (numer r))
+         (display "/")
+         (display (denom r))))
+
+; (print-rat (+rat (make-rat 3 4) (make-rat 1 4)))
+; (newline)
+; (print-rat (*rat (make-rat 3 4) (make-rat 2 5)))
+; (newline)
+
+
 
 ;;; -------------------------- TODO --------------------------------
 
