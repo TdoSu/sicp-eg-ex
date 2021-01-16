@@ -419,8 +419,14 @@
 ;;; --- 按愿望思考 (假设我们已经有了...)
 ;;; 然后我们可以给假设已经有了的东西取个名字代替真实的实现进行思考.
 
+;;; ---- pairs 的一个实现方案 ----
 
+(define (make-pair x y) (lambda (k) (if (= k 1) x y)))
+(define (first-part-of-pair z) (z 1))
+(define (second-part-of-pair z) (z 2))
 
+; (display-newline (first-part-of-pair (make-pair 3 4)))
+; (display-newline (second-part-of-pair (make-pair 3 4)))
 
 ;;; -------------------------- TODO --------------------------------
 
