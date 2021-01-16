@@ -46,6 +46,11 @@
       l2
       (cons (car l1) (append-list (cdr l1) l2))))
 
+(define (for-each-list proc items)
+  (if (not (null? items))
+      (begin (proc (car items))
+             (for-each-list proc (cdr items)))))
+
 ;;; string->list list->string
 ;;; string-ref string-length string-append
 
