@@ -433,6 +433,60 @@
 ; (display-newline (first-part-of-pair (make-pair 3 4)))
 ; (display-newline (second-part-of-pair (make-pair 3 4)))
 
+;;; ---- 画图 ----
+
+;;; 图像是一个过程, 给它一个矩形, 它可以在里面画东西
+
+;;; 矩形 rect --- 一个原点和两个向量
+(define (make-rect h v o) (list h v o))
+(define (horiz-rect r) (car r))
+(define (vert-rect r) (cadr r))
+(define (origin-rect r) (caddr r))
+
+;;; 向量操作
+(define (make-vect x y) (cons x y))
+(define (x-vect v) (car v))
+(define (y-vect v) (cdr v))
+(define (+vect v1 v2)
+  (make-vect (+ (x-vect v1) (x-vect v2))
+             (+ (y-vect v1) (y-vect v2))))
+(define (scale-vect x v)
+  (make-vect (* (x-vect v) x)
+             (* (y-vect v) x)))
+
+;;; 给定矩形返回一个过程, 这个过程可以把指定点映射到这个矩形内
+(define (coord-map rect)
+  (lambda (point)
+    (+vect (+vect (scale-vect (x-point point)
+                              (horiz-rect rect))
+                  (scale-vect (y-point point)
+                              (vert-rect rect)))
+           (origin-rect rect))))
+
+;;; 图像可以理解为线段列表, 线段可以由两个点定义
+;;; Constructing Primitvie Pictures from Lists of Segments
+
+(define (make-picture seglist)
+  (lambda (rect)
+    (for-each-list
+      (lambda (s)
+        ;;; drawline 假设系统内部已经实现了
+        (drawline
+          ((coord-map rect) (start-segment s))
+          ((coord-map rect) (end-segment s))))
+      seglist)))
+
+; (define r (make-rect (make-vect 5 0)
+;                      (make-vect 0 5)
+;                      (make-point 0 0)))
+; (define g (make-picture
+;             (list (make-segment (make-point 1 2) (make-point 3 4))
+;                   (make-segment (make-point 3 4) (make-point 2 5))
+;                   (make-segment (make-point 2 5) (make-point 1 2)))))
+; (g r)
+
+
+
 ;;; -------------------------- TODO --------------------------------
 
 (exit)
