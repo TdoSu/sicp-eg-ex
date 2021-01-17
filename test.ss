@@ -438,10 +438,10 @@
 ;;; 图像是一个过程, 给它一个矩形, 它可以在里面画东西
 
 ;;; 矩形 rect --- 一个原点和两个向量
-(define (make-rect h v o) (list h v o))
-(define (horiz-rect r) (car r))
-(define (vert-rect r) (cadr r))
-(define (origin-rect r) (caddr r))
+(define (make-rect o h v) (list o h v))
+(define (origin-rect r) (car r))
+(define (horiz-rect r) (cadr r))
+(define (vert-rect r) (caddr r))
 
 ;;; 向量操作
 (define (make-vect x y) (cons x y))
@@ -484,6 +484,63 @@
 ;                   (make-segment (make-point 3 4) (make-point 2 5))
 ;                   (make-segment (make-point 2 5) (make-point 1 2)))))
 ; (g r)
+
+;;; 图形操作就变成了对矩形的变换
+
+(define (beside-picture p1 p2 a)
+  (lambda (rect)
+    (p1 (make-rect
+          (origin-rect rect)
+          (scale-vect a (horiz-rect rect))
+          (vert-rect rect)))
+    (p2 (make-rect
+          (+vect (origin-rect rect)
+                 (scale a (horiz-rect rect)))
+          (scale (- 1 a) (horiz-rect rect))
+          (vert-rect rect)))))
+
+(define (rotate90-picture p)
+  (lambda (rect)
+    (p (make-rect
+         (+vect (origin-rect rect)
+                (horiz-rect rect))
+         (vert-rect rect)
+         (scale -1 (horiz-rect rect))))))
+
+;;; All right, so you're using the procedural representation
+;;; to ensure the closure.
+
+;;; What I mean is by embedding the language in this way,
+;;; all the power of Lisp is automatically available
+;;; as an extension to whatever you want to do.
+
+;;; 这样我们自然就有了 Lisp 组合过程的能力.
+
+(define (right-push-picture p n a)
+  (if (= n 0)
+      p
+      (beside-picture p
+                      (right-push p (- n 1) a)
+                      a)))
+
+(define (push-picture comb)
+  (lambda (pict n a)
+    ((repeated
+       (lambda (p) (comb pict p a))
+       n)
+     pict)))
+
+(define (combine-proc f g)
+  (lambda (x) (f (g x))))
+
+(define (repeated p n)
+  (if (= n 1)
+      p
+      (combine-proc p (repeated p (- n 1)))))
+
+; (display-newline ((repeated (lambda (x) (+ x 2)) 3) 3))
+
+(define right-push (push-picture beside))
 
 
 
