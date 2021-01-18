@@ -540,7 +540,68 @@
 
 ; (display-newline ((repeated (lambda (x) (+ x 2)) 3) 3))
 
-(define right-push (push-picture beside))
+(define right-push (push-picture beside-picture))
+
+;;; ------- 符号求导 --------
+
+(define (deriv-expr expr var)
+  (define (zero? x) (and (number? x) (= x 0)))
+  (define (one? x) (and (number? x) (= x 1)))
+  ;;; 常量
+  (define (constant? expr var)
+    (and (atom? expr)
+         (not (eq? expr var))))
+  ;;; 同一个变量
+  (define (same-var? expr var)
+    (and (atom? expr)
+         (eq? expr var)))
+  ;;; 和
+  (define (sum-expr? expr)
+    (and (not (atom? expr))
+         (eq? (car expr) '+)))
+  (define (make-sum-expr a1 a2)
+    (cond ((zero? a1) a2)
+          ((zero? a2) a1)
+          ((and (number? a1) (number? a2)) (+ a1 a2))
+          (else (list '+ a1 a2))))
+  (define (a1-sum-expr expr) (cadr expr))
+  (define (a2-sum-expr expr) (caddr expr))
+  ;;; 积
+  (define (product-expr? expr)
+    (and (not (atom? expr))
+         (eq? (car expr) '*)))
+  (define (make-product-expr m1 m2)
+    (cond ((or (zero? m1) (zero? m2)) 0)
+          ((one? m2) m1)
+          ((one? m1) m2)
+          ((and (number? m1) (number? m2)) (* m1 m2))
+          (else (list '* m1 m2))))
+  (define (m1-product-expr expr) (cadr expr))
+  (define (m2-product-expr expr) (caddr expr))
+  ;;; 程序主体
+  (cond ((constant? expr var) 0)
+        ((same-var? expr var) 1)
+        ((sum-expr? expr)
+         (make-sum-expr (deriv-expr (a1-sum-expr expr) var)
+                        (deriv-expr (a2-sum-expr expr) var)))
+        ((product-expr? expr)
+         (make-sum-expr (make-product-expr
+                          (m1-product-expr expr)
+                          (deriv-expr (m2-product-expr expr) var))
+                        (make-product-expr
+                          (m2-product-expr expr)
+                          (deriv-expr (m1-product-expr expr) var))))
+        ;;; 其他规则
+        ))
+
+; (define foo
+;   '(+ (* a (* x x))
+;       (+ (* b x)
+;          c)))
+; (display-newline (deriv-expr foo 'x))
+; (display-newline (deriv-expr foo 'a))
+; (display-newline (deriv-expr foo 'b))
+; (display-newline (deriv-expr foo 'c))
 
 
 
