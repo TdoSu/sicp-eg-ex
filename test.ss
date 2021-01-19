@@ -603,6 +603,151 @@
 ; (display-newline (deriv-expr foo 'b))
 ; (display-newline (deriv-expr foo 'c))
 
+;;; -------------- 模式实现符号求导 -----------------
+
+;;; 我们为什么要把这些规则翻译成计算机语言呢?
+;;; 按表达式类型做分派 (dispatch) 的分情况分析语句
+;;; 按类型分派
+;;; 有没有其他办法把程序写的更清晰一些呢.
+;;; 规则分左右两个部分, 左边的部分用来判断和匹配, 右边替换原来的表达式.
+
+;;; pattern ----- rule ----> skeleton
+;;;   |                         |
+;;;   |                         |
+;;;   match                   instantiation
+;;;   |                         |
+;;;   |                         |
+;;;   V                         V
+;;; expression -------------> exrpession
+;;; source                    target
+
+;;; 构建一种语言实现描述规则,
+;;; 并且实现这个语言的解释和执行(翻译成可运行的计算机程序)
+
+(define deriv-rules
+  '(
+    ;;; 前面部分是 pattern (match), 后面部分是 skeleton (instantiation)
+    ;;; match 判断是否匹配, 并且抽取各个部分
+    ;;; instantiation 把 match 抽取的部分填入 skeleton
+    ((dd (?c c) (? v))    0)
+    ((dd (?v v) (? v))    1)
+    ((dd (?v u) (? v))    0)
+    ((dd (+ (? x1) (? x2)) (? v))
+     (+ (dd (: x1) (: v))
+        (dd (: x2) (: v))))
+    ((dd (* (? x1) (? x2)) (? v))
+     (+ (* (: x1) (dd (: x2) (? v)))
+        (* (: x2) (dd (: x1) (? v)))))
+    ((dd (** (? x) (?c n)) (? v))
+     (* (* (: n)
+           (** (: x) (: (- n 1))))
+        (dd (: x) (: v))))
+  ))
+
+;;; pattern match
+;;; foo --- matches exactly foo
+;;; (f a b) --- matches that first element is f, second a, third b
+;;; (? x) --- matches anything called x
+;;; (?c x) --- matches constant called x
+;;; (?v x) --- matches variable called x
+
+;;; skeleton
+;;; foo --- foo, a symbol, instantion to itself
+;;; (f a b) --- instantiates to a 3-list, f, a, b
+;;; (: x) --- instantiates to the value of x as in the matched pattern
+
+(define algebra-rules
+  '(
+    (((? op) (?c e1) (?c e2))
+     (: (op e1 e2)))
+    ;;; 如果是除法这条规则是有漏洞的
+    (((? op) (? e1) (?c e2))
+     ((: op) (: e2) (: e1)))
+    ((+ 0 (? e)) (: e))
+    ((* 1 (? e)) (: e))
+    ((* 0 (? e)) 0)
+    ((* (?c e1) (* (?c e2) (? e3)))
+     (* (: (* e1 e2)) (: e3)))
+    ((* (? e1) (* (?c e2) (? e3)))
+     (* (: e2) (* (: e1) (: e3))))
+    ((* (* (? e1) (? e2)) (? e3))
+     (* (: e1) (* (: e2) (: e3))))
+    ((* (?c e1) (* (?c e2) (? e3)))
+     (* (: (* e1 e2)) (: e3)))
+  ))
+
+(define (match pat expr dict)
+  (cond ((eq? dict 'failed) 'failed)
+        ;;; 这里判断基本元素是否匹配
+        ((atom? pat)
+         ;;; Atomic patterns
+         (if (atom? expr)
+             (if (eq? pat expr)
+                 dict
+                 'failed)
+             'failed))
+        ;;; Pattern variable clauses
+        ;;; ?c
+        ((arbitrary-constant? pat)
+         (if (constant? expr)
+             (extend-dict pat expr dict)
+             'failed))
+        ;;; ?v
+        ((arbitrary-variable? pat)
+         (if (variable? expr)
+             (extend-dict pat expr dict)
+             'failed))
+        ((arbitrary-expression? pat)
+         (extend-dict pat expr dict))
+        ((atom? expr) 'failed)
+        ;;; 这里判断通用规则
+        (else
+          (match (cdr pat)
+                 (cdr expr)
+                 (match (car pat)
+                        (car expr)
+                        dict)))))
+
+(define (instantiate skeleton dict)
+  (define (evaluate form dict)
+    (if (atom? form)
+        (lookup form dict)
+        (apply
+          (eval (lookup (car form) dict)
+                user-initial-environment)
+          (mapcar (lambda (v)
+                    (lookup v dict))
+                  (cdr form)))))
+  (define (loop s)
+    (cond ((atom? s) s)
+          ;;; : 表达式的替换
+          ((skeleton-evaluation? s)
+           (evaluate (eval-expr s) dict))
+          (else (cons (loop (car s))
+                      (loop (cdr s))))))
+  (loop skeleton))
+
+; (define (simplifier rules)
+;   (lambda (expr)
+;     ()))
+
+; (define dsimp
+;   (simplifier deriv-rules))
+
+;;; (display-newline (dsimp '(dd (+ x y) x)))
+;;; => (+ 1 0)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;;; -------------------------- TODO --------------------------------
