@@ -727,9 +727,41 @@
                       (loop (cdr s))))))
   (loop skeleton))
 
-; (define (simplifier rules)
-;   (lambda (expr)
-;     ()))
+(define (simplifier the-rules)
+  (define (simplify-expr expr)
+    (try-rules (if (compound? expr)
+                   (map-list simplify-expr expr)
+                   expr)))
+  (define (try-rules expr)
+    (define (scan rules)
+      (if (null? rules)
+          expr
+          (let ((dict
+                  (match (pattern (car rules))
+                         expr
+                         (empty-dictionary))))
+            (if (eq? dict 'failed)
+                (scan (cdr rules))
+                (simplify-expr
+                  (instantiate
+                    (skeleton (car rules))
+                    dict))))))
+    (scan the-rules))
+  simplify-expr)
+
+(define (empty-dictionary) '())
+
+(define (extend-dict pat dat dict)
+  (let ((name (variable-name pat)))
+    (let ((v (assq name dict)))
+      (cond ((null? v)
+             (cons (list name dat) dict))
+            ((eq? (cadr v) dat) dict)
+            (else 'failed)))))
+
+(define (lookup var dict)
+  (let ((v (assq var dict)))
+    (if (null? v) var (cadr v))))
 
 ; (define dsimp
 ;   (simplifier deriv-rules))
@@ -737,18 +769,83 @@
 ;;; (display-newline (dsimp '(dd (+ x y) x)))
 ;;; => (+ 1 0)
 
+;;; ---------- 通用运算 ------------
+;;; 通用操作的意思是, 一个操作根据数据的种类决定做什么.
+;;; Generic operator means what sort of precisely does depends
+;;; on the kind of data that it's looking at.
+;;; 数据抽象 -- 数据 api 是横向分层
+;;; 数据类型 -- 是纵向分层
 
+;;; Arithmetic operations on complex numbers
 
+(define (+c z1 z2)
+  (make-rectangular-c (+ (real-part-c z1) (real-part-c z2))
+                      (+ (imag-part-c z1) (imag-part-c z2))))
+(define (-c z1 z2)
+  (make-rectangular-c (- (real-part-c z1) (real-part-c z2))
+                      (- (imag-part-c z1) (imag-part-c z2))))
+(define (*c z1 z2)
+  (make-polar-c (* (magnitude-c z1) (magnitude-c z2))
+                (+ (angle-c z1) (angle-c z2))))
+(define (/c z1 z2)
+  (make-polar-c (/ (magnitude-c z1) (magnitude-c z2))
+                (- (angle-c z1) (angle-c z2))))
 
+;;; selectors
+(define (real-part-c-rectangular z) (car z))
+(define (imag-part-c-rectangular z) (cdr z))
+(define (magnitude-c-rectangular z)
+  (sqrt (+ (square (car z)) (square (cdr z)))))
+(define (angle-c-rectangular z) (atan (cdr z) (car z)))
 
+;;; constructors
+(define (make-rectangular-c x y)
+  (attach-type 'rectangular (cons x y)))
+; (define (make-polar-c r a) (cons (* r (cos a)) (* r (sin a))))
 
+;;; selectors
+(define (real-part-c-polar z) (* (car z) (cos (cdr z))))
+(define (imag-part-c-polar z) (* (car z) (sin (cdr z))))
+(define (magnitude-c-polar z) (car z))
+(define (angle-c-polar z) (cdr z))
 
+;;; constructors
+; (define (make-rectangular-c x y)
+;   (cons (sqrt (+ (square x) (square y)))
+;         (atan (/ y x))))
+(define (make-polar-c r a)
+  (attach-type 'polar (cons r a)))
 
+;;; TYPED DATA (type + content)
 
+;;; Support mechanism for manifest types
 
+(define (attach-type type contents) (cons type contents))
+(define (type datum) (car datum))
+(define (contents datum) (cdr datum))
 
+;;; type predicates
 
+(define (rectangular? z) (eq? (type z) 'rectangular))
+(define (polar? z) (eq? (type z) 'polar))
 
+;;; generic selectors for complex numbers
+
+(define (real-part-c z)
+  (cond ((rectangular? z) (real-part-c-rectangular (contents z)))
+        ((polar? z) (real-part-c-polar (contents z)))))
+
+(define (imag-part-c z)
+  (cond ((rectangular? z) (imag-part-c-rectangular (contents z)))
+        ((polar? z) (imag-part-c-polar (contents z)))))
+
+(define (magnitude-c z)
+  (cond ((rectangular? z) (magnitude-c-rectangular (contents z)))
+        ((polar? z) (magnitude-c-polar (contents z)))))
+
+(define (angle-c z)
+  (cond ((rectangular? z) (angle-c-rectangular (contents z)))
+        ((polar? z) (angle-c-polar (contents z)))))
 
 ;;; -------------------------- TODO --------------------------------
 
