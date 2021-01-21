@@ -847,6 +847,137 @@
   (cond ((rectangular? z) (angle-c-rectangular (contents z)))
         ((polar? z) (angle-c-polar (contents z)))))
 
+;;; 上面的方式叫做 DISPATCH ON TYPE
+;;; 这个系统的问题时, 需要一个经理做大量分派的工作.
+;;; 而这个工作完全可以被查表代替.
+
+; (put key1 key2 value)
+; (get key1 key2) => value
+
+;;; Installing the rectangular
+;;; operation in the table
+
+; (put 'rectangular 'real-part real-part-c-rectangular)
+; (put 'rectangular 'imag-part imag-part-c-rectangular)
+; (put 'rectangular 'magnitude magnitude-c-rectangular)
+; (put 'rectangular 'angle angle-c-rectangular)
+
+;;; Installing the polar
+;;; operation in the table
+
+; (put 'polar 'real-part real-part-c-polar)
+; (put 'polar 'imag-part imag-part-c-polar)
+; (put 'polar 'magnitude magnitude-c-polar)
+; (put 'polar 'angle angle-c-polar)
+
+(define (operate op obj)
+  (let ((proc (get (type obj) op)))
+    (if (not (null? proc))
+        (proc (contents obj))
+        (error "undefined operator" op))))
+
+;;; Defining the selectors using operate
+
+(define (real-part-c obj) (operate 'real-part obj))
+(define (imag-part-c obj) (operate 'imag-part obj))
+(define (magnitude-c obj) (operate 'magnitude obj))
+(define (angle-c obj) (operate 'angle obj))
+
+;;; 上面的实现叫做 DATA-DIRECTED PROGRAMMING
+;;; 让数据携带着如何操作他们的信息.
+
+;;; MESSAGE PASSING 风格
+;;; 让数据直接携带操作他们的方法.
+
+;;; installing rational numbers in the generic arithmetic system
+
+(define (make-rat x y)
+  (attach-type 'rational (cons x y)))
+
+; (put 'rational 'add +rat)
+; (put 'rational 'sub -rat)
+; (put 'rational 'mul *rat)
+; (put 'rational 'div /rat)
+
+(define (add x y) (operate-2 'add x y))
+
+(define (operate-2 op arg1 arg2)
+  (if (eq? (type arg1) (type arg2))
+      (let ((proc (get (type arg1) op)))
+        (if (not (null? proc))
+            (proc (contents arg1)
+                  (contents arg2))
+            (error "Op undefined on type" op)))
+      (error "Args not same type" arg1 arg2)))
+
+;;; installing complex numbers
+
+(define (make-complex z) (attach-type 'complex z))
+(define (+complex z1 z2) (make-complex (+c z1 z2)))
+(define (-complex z1 z2) (make-complex (-c z1 z2)))
+(define (*complex z1 z2) (make-complex (*c z1 z2)))
+(define (/complex z1 z2) (make-complex (/c z1 z2)))
+
+; (put 'complex 'add +complex)
+; (put 'complex 'sub -complex)
+; (put 'complex 'mul *complex)
+; (put 'complex 'div /complex)
+
+;;; installing ordinary numbers
+
+(define (make-number n) (attach-type 'number n))
+(define (+number x y) (make-number (+ x y)))
+(define (-number x y) (make-number (- x y)))
+(define (*number x y) (make-number (* x y)))
+(define (/number x y) (make-number (/ x y)))
+
+; (put 'number 'add +number)
+; (put 'number 'sub -number)
+; (put 'number 'mul *number)
+; (put 'number 'div /number)
+
+;;; 类型的链条, 在表格的纵向屏障中为你指路.
+;;; 一层层拆掉类型, 一层层添加类型.
+
+;;; installing polynomials
+
+(define (make-polynomial var term-list)
+  (attach-type 'polynomial
+               (cons var term-list)))
+
+(define (+poly p1 p2)
+  (if (same-var? (var p1) (var p2))
+      (make-polynomial
+        (var p1)
+        (+terms (term-list p1)
+                (term-list p2)))
+      (error "Polys not in same var" p1 p2)))
+
+; (put 'polynomial 'add +poly)
+
+(define (+terms l1 l2)
+  (define (add-term t1 t2)
+    (make-term (order t1)
+               ;;; 这个通用运算的 add 是关键
+               (add (coeff t1)
+                    (coeff t2))))
+  (cond ((empty-termlist? l1) l2)
+        ((empty-termlist? l2) l1)
+        (else
+          (let ((t1 (first-term l1))
+                (t2 (first-term l2)))
+            (cond ((> (order t1) (order t2))
+                   (adjoin-term t1 (+terms (rest-terms l1) l2)))
+                  ((< (order t1) (order t2))
+                   (adjoin-term t2 (+terms l1 (rest-terms l2))))
+                  (else
+                    (adjoin-term (add-term t1 t2)
+                                 (+terms (rest-terms l1)
+                                         (rest-terms l2)))))))))
+
+;;; DECENTRALIZED CONTROL
+
+
 ;;; -------------------------- TODO --------------------------------
 
 (exit)
