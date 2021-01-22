@@ -977,6 +977,62 @@
 
 ;;; DECENTRALIZED CONTROL
 
+;;; -------------------------
+
+
+;;; (set! <var> <value>)
+
+(define (fact n)
+  (let ((m 1) (i 1))
+    (define (loop)
+      (cond ((> i n) m)
+            (else
+              ;;; 注意这两行如果调换顺序, 就出错了
+              (set! m (* m i))
+              (set! i (+ i 1))
+              (loop))))
+    (loop)))
+
+; (display-newline (fact 5))
+
+;;; -----------------------
+;;; Environment Model
+;;; -----------------------
+
+;;; Bound Variables
+;;; ----------------
+;;; We say that a variable V, is "bound in an expression" E.
+;;; If the meaning of E is unchanged by the uniform replacement of
+;;; a variable W (E 中没有这个变量),
+;;; not occuring in E, for every occurrence of V in E.
+
+;;; Free Varibales
+;;; ----------------
+;;; We say that a variable V, is "free in an expression" E.
+;;; If the meaning of E is changed by the uniform replacement of
+;;; a variable W, not occuring in E for every occurrence of V in e.
+
+;;; Scope
+;;; ----------------
+;;; If x is a bound variable in E then there is a lambda expression
+;;; where it is bound. We call the list of formal parameters of the
+;;; lambda expression the "bound variable list" and we say that
+;;; the lambda expression "binds" the variables "declared" in its bound
+;;; variables list. In addition, these parts of expression where
+;;; a variable has a value defined by the lambda expression
+;;; which binds it is called the "scope" of the variable.
+
+;;; 环境是一种结构化的表 -- 由框架组成.
+;;; 框架是环境的一部分, 它们被链接在一起构成环境.
+;;; 环境就是你寻找一个自由变量的值到底是多少的地方.
+
+;;; 过程由两个部分组成,
+;;; 一个部分指向代码,
+;;; 一个部分指向寻找自由变量值的环境.
+
+;;; 环境模型的两条规则 --- 太长了, 不写了
+
+
 
 ;;; -------------------------- TODO --------------------------------
 
