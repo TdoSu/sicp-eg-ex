@@ -1032,6 +1032,51 @@
 
 ;;; 环境模型的两条规则 --- 太长了, 不写了
 
+(define make-counter
+  (lambda (n)
+    (lambda ()
+      (set! n (+ n 1))
+      n)))
+
+; (define counter1 (make-counter 0))
+; (define counter2 (make-counter 0))
+; (display-newline (counter1))
+; (display-newline (counter1))
+; (display-newline (counter2))
+; (display-newline (counter2))
+
+;;; 有两个看起来一样的东西,
+;;; 怎么判断他们是同一个东西还是两个不同的东西呢,
+;;; 改变一个, 看另一个是是否也改变.
+
+;;; Cesaro's method for estimating Pi:
+;;;   Prob(gcd(n1, n2) = 1) = 6 / (Pi * Pi)
+
+(define (estimate-pi n)
+  (sqrt (/ 6 (monte-carlo n cesaro))))
+
+(define (cesaro)
+  (= (gcd (random 1000000000) (random 100000000)) 1))
+
+(define (monte-carlo trials experiment)
+  (define (iter remaining passed)
+    (cond ((= remaining 0)
+           (/ passed trials))
+          ((experiment)
+           (iter (- remaining 1)
+                 (+ passed 1)))
+          (else
+            (iter (- remaining 1)
+                  passed))))
+  (iter trials 0))
+
+(display-newline (estimate-pi 100000))
+
+; (define rand
+;   (let ((x random-init))
+;     (lambda ()
+;       (set! x (rand-update x))
+;       x)))
 
 
 ;;; -------------------------- TODO --------------------------------
