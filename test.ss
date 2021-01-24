@@ -1170,6 +1170,28 @@
           (remove-first-item! the-agenda)
           (propagate))))
 
+;;; agenda -- 优先队列
+;;; agenda 需要有头节点,
+;;; 因为有 remove-first-item! 操作, 第一个节点会经常变化
+
+; (define (make-agenda))
+; (define (current-time agenda))
+; (define (empty-agenda? agenda))
+; (define (add-to-agenda! time action agenda))
+; (define (first-item agenda))
+; (define (remove-first-item! agenda))
+
+;;; Queue
+
+; (define (make-queue))
+; (define (insert-queue! queue item))
+; (define (delete-queue! queue))
+; (define (front-queue queue))
+; (define (empty-queue? queue))
+
+;;; (set-car! <pair> <value>)
+;;; (set-cdr! <pair> <value>)
+
 ; (define the-agenda (make-agenda))
 ; (define inverter-delay 2)
 ; (define and-gate-delay 3)
@@ -1185,8 +1207,6 @@
 ; (propagate)
 ; (set-signal! input-2 1)
 ; (propagate)
-
-
 
 ;;; -------------------------- TODO --------------------------------
 
