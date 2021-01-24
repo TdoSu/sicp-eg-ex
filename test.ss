@@ -1208,6 +1208,59 @@
 ; (set-signal! input-2 1)
 ; (propagate)
 
+;;; Identity
+;;; 引入赋值之后, 就出现了两个东西是不是同一个的问题.
+
+(define a (cons 1 2))
+(define b (cons a a))
+;;; 这是 (car b) (cdr b) a 指向同一个东西
+;;; they are sharing here...
+;;; 这种身份共享很难控制, 是大型系统变得复杂和充满 bug 的一个原因.
+(set-car! (car b) 3)
+; (display-newline a)
+; (display-newline b)
+
+;;; cons car cdr 的另一个实现
+(define (my-cons x y) (lambda (m) (m x y)))
+(define (my-car z) (z (lambda (x y) x)))
+(define (my-cdr z) (z (lambda (x y) y)))
+
+; (display-newline (my-car (my-cons 1 2)))
+;;; 代换模型
+;;; (my-car (my-cons 1 2))
+;;; (my-car (lambda (m) (m 1 2)))
+;;; ((lambda (m) (m 1 2)) (lambda (x y) x))
+;;; ((lambda (x y) x) 1 2)
+;;; 1
+
+; (display-newline (my-cdr (my-cons 1 2)))
+;;; 代换模型
+;;; (my-car (my-cons 1 2))
+;;; (my-car (lambda (m) (m 1 2)))
+;;; ((lambda (m) (m 1 2)) (lambda (x y) y))
+;;; ((lambda (x y) y) 1 2)
+;;; 2
+
+;;; "Lambda Calculus" Mutable Data
+(define (my-cons x y)
+  ;;; 注意这里和 "对象实现" 用到的 dispatch 很像
+  (lambda (m)
+    (m x
+       y
+       (lambda (n) (set! x n))
+       (lambda (n) (set! y n)))))
+(define (my-car z) (z (lambda (x y sa sd) x)))
+(define (my-cdr z) (z (lambda (x y sa sd) y)))
+;;; 用 set! 实现 set-car! set-cdr!
+(define (my-set-car! z x) (z (lambda (a d sa sd) (sa x))))
+(define (my-set-cdr! z y) (z (lambda (a d sa sd) (sd y))))
+
+; (define tt (my-cons 1 2))
+; (display-newline (my-car tt))
+; (my-set-car! tt 3)
+; (display-newline (my-car tt))
+
+
 ;;; -------------------------- TODO --------------------------------
 
 (exit)
