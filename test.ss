@@ -1373,6 +1373,66 @@
 ; (display-newline (sum-odd-squares t))
 ; (display-newline (odd-fibs 1 12))
 
+(define (flatten-stream st-of-st)
+  (accumulate-stream append-streams the-empty-stream st-of-st))
+
+; (display-newline (flatten-stream '((1 2) (2 3) (2 5 7))))
+
+(define (flatten-map-stream f s)
+  (flatten-stream (map-stream f s)))
+
+;;; given n find all pairs 0<j<i<=n
+;;; such that i + j is prime
+
+(define (prime? n)
+  (define (iter g)
+    (cond ((< n 2) #f)
+          ((> (square g) n) #t)
+          ((not (= (remainder n g) 0))
+           (iter (+ g 1)))
+          (else #f)))
+  (iter 2))
+
+(define (prime-sum-pairs n)
+  (map
+    (lambda (p)
+      (list (car p) (cadr p) (+ (car p) (cadr p))))
+    (filter
+      (lambda (p) (prime? (+ (car p) (cadr p))))
+      ;;; 区间映射为序对
+      (flatten-map-stream
+        (lambda (i)
+          (map-stream (lambda (j) (list i j))
+                      (enumerate-intreval 1 (- i 1))))
+        (enumerate-intreval 1 n)))))
+
+; (display-newline (prime-sum-pairs 6))
+
+;;; collect 语法糖
+; (define (prime-sum-pairs n)
+;   (collect
+;     (list i j (+ i j))
+;     ((i (enum-interval 1 n))
+;      (j (enum-interval 1 (- i 1))))
+;     (prime? (+ i j))))
+
+;;; 八皇后问题
+;;; (safe? <row> <column> <rest-of-positions>)
+;;; 回溯法 backtracking search -- 因为关注时间而过于复杂
+;;; 递归策略 -- 假设 k-1 个已经摆放好了, 然后过滤出安全的第 k 个位置
+;;; (define (queens size)
+;;;   (define (fill-cols)
+;;;     (if (= k 0)
+;;;         (singleton empty-board)
+;;;         (collect
+;;;           (adjoin-position try-row
+;;;                            k
+;;;                            rest-queens)
+;;;           ((rest-queens (fill-cols (- k 1)))
+;;;            (try-row (enum-interval 1 size)))
+;;;           (safe? try-row k rest-queens))))
+;;;   (fill-cols size))
+
 
 
 ;;; -------------------------- TODO --------------------------------
