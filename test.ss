@@ -1260,6 +1260,120 @@
 ; (my-set-car! tt 3)
 ; (display-newline (my-car tt))
 
+;;; ASSIGNMENT AND STATES
+;;; STATE, CHANGE, TIME
+;;; IDENTITY, OBJECT, SHARING
+
+;;; MODULAR SYSTEMS
+
+;;; STREAM PROCESSING
+
+;;; 计算一棵树中所有奇数的平方和
+
+(define (sum-odd-squares tree)
+  (define (leaf-node? tree) (atom? tree))
+  (define (left-branch tree) (car tree))
+  (define (right-branch tree) (cadr tree))
+  (if (leaf-node? tree)
+      (if (odd? tree)
+          (square tree)
+          0)
+      (+ (sum-odd-squares
+           (left-branch tree))
+         (sum-odd-squares
+           (right-branch tree)))))
+
+; (define t '(1 ((4 (2 5)) (8 3))))
+; (display-newline (sum-odd-squares t))
+
+(define (odd-fibs n)
+  (define (next k)
+    (if (> k n)
+        '()
+        (let ((f (fib k)))
+          (if (odd? f)
+              (cons f (next (+ 1 k)))
+              (next (+ 1 k))))))
+  (next 1))
+
+; (display-newline (odd-fibs 12))
+
+;;; 从信号处理的角度拆解上面的两个过程
+;;; 信号发生器 -- 信号过滤器 -- 信号处理 -- 信号整合
+;;; enumerates leaves --> filter odd? --> map square --> acc + 0
+;;; enumerates interval --> map fib --> filter odd? --> acc cons '()
+
+;;; 用 stream 来作为传递的信号
+;;; for and x and y,
+;;; (head-stream (cons-stream x y)) == x
+;;; (tail-stream (cons-stream x y)) == y
+
+(define (cons-stream x y) (cons x y))
+(define (head-stream s) (car s))
+(define (tail-stream s) (cdr s))
+(define the-empty-stream '())
+(define (empty-stream? s) (null? s))
+
+(define (map-stream proc s)
+  (if (empty-stream? s)
+      the-empty-stream
+      (cons-stream (proc (head-stream s))
+                   (map-stream proc (tail-stream s)))))
+
+(define (filter-stream predicate s)
+  (cond ((empty-stream? s) the-empty-stream)
+        ((predicate (head-stream s))
+         (cons-stream (head-stream s)
+                      (filter-stream predicate (tail-stream s))))
+        (else (filter-stream predicate (tail-stream s)))))
+
+(define (accumulate-stream op initial s)
+  (if (empty-stream? s)
+      initial
+      (op (head-stream s)
+          (accumulate-stream op initial (tail-stream s)))))
+
+(define (append-streams s1 s2)
+  (if (empty-stream? s1)
+      s2
+      (cons-stream (head-stream s1)
+                   (append-streams (tail-stream s1)
+                                   s2))))
+
+(define (enumerate-tree tree)
+  (define (leaf-node? tree) (or (null? tree) (atom? tree)))
+  (define (left-branch tree) (car tree))
+  (define (right-branch tree) (cadr tree))
+  (if (leaf-node? tree)
+      (cons-stream tree the-empty-stream)
+      (append-streams
+        (enumerate-tree (left-branch tree))
+        (enumerate-tree (right-branch tree)))))
+
+(define (enumerate-intreval low high)
+  (if (> low high)
+      the-empty-stream
+      (cons-stream low
+                   (enumerate-intreval (+ low 1) high))))
+
+(define (sum-odd-squares tree)
+  (accumulate-stream
+    +
+    0
+    (map-stream square
+                (filter-stream odd?  (enumerate-tree tree)))))
+
+(define (odd-fibs low high)
+  (accumulate-stream
+    cons
+    '()
+    (filter-stream odd? (map-stream fib (enumerate-intreval low high)))))
+
+; (define t '(1 ((4 (2 5)) (8 3))))
+; (display-newline (sum-odd-squares t))
+; (display-newline (odd-fibs 1 12))
+
+
 
 ;;; -------------------------- TODO --------------------------------
 
