@@ -1433,7 +1433,77 @@
 ;;;           (safe? try-row k rest-queens))))
 ;;;   (fill-cols size))
 
+;;; (cons-stream x y)
+;;; abbreviation for (cons x (delay y))
+;;; (head s) --> (car s)
+;;; (tail s) --> (force (cdr s))
 
+;;; (head (tail (filter prime? (e-i 10000 1000000))))
+
+;;; (delay <expr>)
+;;; abbreviation for (lambda () (expr))
+
+;;; (force p) = (p)
+
+;;; 通过 delay 和 force 我们解耦了程序的逻辑顺序和实际的运行顺序
+
+;;; 改进版 delay --> (memo-proc (lambda () (expr)))
+
+;;; 为了避免 (tail (tail (tail ...)))
+;;; 其实就是保存了每次 tail 的结果, 给下一次 tail 使用
+(define (memo-proc proc)
+  (let ((already-run? '())
+        (result '()))
+    (lambda ()
+      (if (not already-run?)
+          (sequence
+            (set! result (proc))
+            (set! already-run? (not '()))
+            result)
+          result))))
+
+(define (cons-stream x y) (cons x y))
+(define (head s) (car s))
+;;; 这里没有用 force 而是直接调用求值
+(define (tail s) ((cdr s)))
+
+(define (nth-stream n s)
+  (if (= n 0)
+      (head s)
+      (nth-stream (- n 1) (tail s))))
+
+(define (print-stream s)
+  (define print display-newline)
+  (cond ((empty-stream? s) "done")
+        (else (print (head s))
+              (print-stream (tail s)))))
+
+(define (integers-from n)
+  (cons-stream
+    n
+    ;;; 这里写成函数, 避免应用序导致无限循环 -- delay
+    (lambda () (integers-from (+ n 1)))))
+
+(define integers (integers-from  1))
+
+(define (filter-stream predicate s)
+  (define head-stream head)
+  (define tail-stream tail)
+  (cond ((empty-stream? s) the-empty-stream)
+        ((predicate (head-stream s))
+         (cons-stream (head-stream s)
+                      (lambda ()
+                        (filter-stream predicate (tail-stream s)))))
+        (else (filter-stream predicate (tail-stream s)))))
+
+(display-newline (nth-stream 20 integers))
+
+(define (no-seven? x) (not (= (remainder x 7) 0)))
+
+(define ns (filter-stream no-seven? integers))
+
+(display-newline (nth-stream 100 ns))
+(print-stream ns)
 
 ;;; -------------------------- TODO --------------------------------
 
