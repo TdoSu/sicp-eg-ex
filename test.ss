@@ -1496,14 +1496,34 @@
                         (filter-stream predicate (tail-stream s)))))
         (else (filter-stream predicate (tail-stream s)))))
 
-(display-newline (nth-stream 20 integers))
+; (display-newline (nth-stream 20 integers))
 
 (define (no-seven? x) (not (= (remainder x 7) 0)))
-
 (define ns (filter-stream no-seven? integers))
 
-(display-newline (nth-stream 100 ns))
-(print-stream ns)
+; (display-newline (nth-stream 100 ns))
+; (print-stream ns)
+
+;;; Eratosthenes 算法 -- 筛法求质数
+
+(define (divisible? a b) (= (remainder a b) 0))
+; (display-newline (divisible? 3 2))
+; (display-newline (divisible? 232 2))
+
+(define (sieve s)
+  (cons-stream
+    (head s)
+    (lambda ()
+      (sieve (filter-stream
+               (lambda (x)
+                 (not (divisible? x (head s))))
+               (tail s))))))
+
+(define primes (sieve (integers-from 2)))
+; (display-newline (nth-stream 20 primes))
+; (print-stream primes)
+
+
 
 ;;; -------------------------- TODO --------------------------------
 
