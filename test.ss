@@ -1523,6 +1523,24 @@
 ; (display-newline (nth-stream 20 primes))
 ; (print-stream primes)
 
+(define (cons-stream x f)
+  (cons x (lambda () (cons-stream (f x) f))))
+
+(define head car)
+
+(define (tail s) ((cdr s)))
+
+(define 1+ (lambda (x) (+ 1 x)))
+
+(define nats (cons-stream 0 1+))
+
+(define (nth-stream s n)
+  (if (= n 0)
+      (head s)
+      (nth-stream (tail s) (- n 1))))
+
+; (display-newline (head (tail (tail nats))))
+; (display-newline (nth-stream nats 3))
 
 
 ;;; -------------------------- TODO --------------------------------
