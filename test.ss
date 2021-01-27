@@ -1523,24 +1523,78 @@
 ; (display-newline (nth-stream 20 primes))
 ; (print-stream primes)
 
-(define (cons-stream x f)
-  (cons x (lambda () (cons-stream (f x) f))))
+;;; -----  一个流实现  ------
 
-(define head car)
+; (define (cons-stream x f)
+;   (cons x (lambda () (cons-stream (f x) f))))
 
-(define (tail s) ((cdr s)))
+; (define head car)
 
-(define 1+ (lambda (x) (+ 1 x)))
+; (define (tail s) ((cdr s)))
 
-(define nats (cons-stream 0 1+))
+; (define 1+ (lambda (x) (+ 1 x)))
 
-(define (nth-stream s n)
-  (if (= n 0)
-      (head s)
-      (nth-stream (tail s) (- n 1))))
+; (define nats (cons-stream 0 1+))
+
+; (define (nth-stream n s)
+;   (display-newline (head s))
+;   (if (= n 0)
+;       (head s)
+;       (nth-stream (tail s) (- n 1))))
 
 ; (display-newline (head (tail (tail nats))))
 ; (display-newline (nth-stream nats 3))
+
+;;; ---------- 上面的实现对于 map ... 有问题 ------------
+
+; (define (map-stream proc s)
+;   (cons-stream (proc (head s))
+;                (map-stream proc (tail s))))
+
+(define (add-streams s1 s2)
+  (cond ((empty-stream? s1) s2)
+        ((empty-stream? s2) s1)
+        (else
+          (cons-stream
+            (+ (head s1) (head s2))
+            (lambda () (add-streams (tail s1) (tail s2)))))))
+
+(define (scale-stream c s)
+  (map-stream (lambda (x) (* x c)) s))
+
+(define ones (cons-stream 1 (lambda () ones)))
+
+; (display-newline (nth-stream 12 ones))
+
+(define nats (cons-stream 0 (lambda () (add-streams nats ones))))
+
+; (display-newline (nth-stream 12 nats))
+; (print-stream nats)
+
+; (display-newline (nth-stream 12 (add-streams nats nats)))
+
+(define (integral s initial-value dt)
+  (define int
+    (cons-stream
+      initial-value
+      (lambda () (add-streams (scale-stream dt s) int))))
+  int)
+
+(define fibs
+  (cons-stream 0
+               (lambda ()
+                 (cons-stream 1
+                              (lambda ()
+                                (add-streams fibs (tail fibs)))))))
+
+; (display-newline (nth-stream 1 fibs))
+; (display-newline (nth-stream 2 fibs))
+; (display-newline (nth-stream 3 fibs))
+; (display-newline (nth-stream 4 fibs))
+; (display-newline (nth-stream 5 fibs))
+; (display-newline (nth-stream 6 fibs))
+; (display-newline (nth-stream 7 fibs))
+
 
 
 ;;; -------------------------- TODO --------------------------------
