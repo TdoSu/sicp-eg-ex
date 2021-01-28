@@ -1606,6 +1606,92 @@
 ;;; 1. 无法优先的表达迭代 -- 拖尾问题
 ;;; 2. 正则序和副作用是不相容的 (正则序和代换模型对应)
 
+;;; Eval is a "Universal Machine"
+
+(define my-eval
+  (lambda (expr env)
+    (cond
+      ;;; *** special forms ***
+      ;;; 3 -> 3
+      ((number? expr) expr)
+      ;;; x -> 3; car -> #[process]
+      ((symbol? expr) (lookup expr env))
+      ;;; 'foo --> (quote foo) -> foo
+      ((eq? (car expr) 'quote) (cadr expr))
+      ;;; (lambda (x) (+ x y)) --> (closure ((x) (+ x y)) <env>)
+      ((eq? (car expr) 'lambda)
+       (list 'closure (cdr expr) env))
+      ;;; (cond (p1 e1) (p2 e2) (p3 e3) ...)
+      ((eq? (car expr) 'cond)
+       (evcond (cdr expr) env))
+      ;;; *** default combination ***
+      (else
+        (my-apply (my-eval (car env) env)
+                  (evlist (cdr expr) env))))))
+
+(define my-apply
+  (lambda (proc args)
+    (cond ((primitive? proc) (apply-primop proc args))
+          ((eq? (car proc) 'closure)
+           (my-eval (cadadr proc)
+                    (bind (caadr proc) args (caddr proc))))
+          (else "error"))))
+
+(define evlist
+  (lambda (l env)
+    (cond ((eq? l '()) '())
+          (else
+            (cons (eval (car l) env)
+                  (evlist (cdr l) env))))))
+
+(define evcond
+  (lambda (clauses env)
+    (cond ((eq? clauses '()) '())
+          ((eq? (caar clauses) 'else)
+           (my-eval (cadar clauses) env))
+          ((false? (my-eval (caar clauses) env))
+           (evcond (cdr clauses) env))
+          ;;; true
+          (else
+            (my-eval (cadar clauses) env)))))
+
+(define bind
+  (lambda (vars vals env)
+    ;;; 把形参和实参配对, 环境就是一个框架表
+    (cons (pair-up vars vals)
+          env)))
+
+(define pair-up
+  (lambda (vars vals)
+    (cond ((eq? vars '())
+           (cond ((eq? vals '()) '())
+                 (else (error TMA))))
+          ((eq? vals '()) (error TFA))
+          (else
+            (cons (cons (car vars)
+                        (car vals))
+                  (pair-up (cdr vars)
+                           (cdr vals)))))))
+
+(define lookup
+  (lambda (sym env)
+    (cond ((eq? env '()) (error UBV))
+          (else
+            ((lambda (vcell)
+               (cond ((eq? vcell '())
+                      (lookup sym
+                              (cdr env)))
+                     (else (cdr vcell))))
+             (my-assq sym (car env)))))))
+
+(define my-assq
+  (lambda (sym alist)
+    (cond ((eq? alist '()) '())
+          ((eq? sym (caar alist))
+           (car alist))
+          (else
+            (my-assq sym (cdr alist))))))
+
 
 ;;; -------------------------- TODO --------------------------------
 
