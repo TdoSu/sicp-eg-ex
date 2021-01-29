@@ -1665,8 +1665,14 @@
   (lambda (vars vals)
     (cond ((eq? vars '())
            (cond ((eq? vals '()) '())
-                 (else (error TMA))))
-          ((eq? vals '()) (error TFA))
+                 (else (error TMA vars vals))))
+          ;;; 特性 1.1
+          ;;; 参数表的尾部不是 '() 而是一个 symbol, 比如 (x . y)
+          ;;; (x . y) 是 (cons x y), 和 (list x y) 不同
+          ;;; 那么就可以用这个 symbol 去匹配所有的值 (表)
+          ((symbol? vars)
+           (cons (cons vars vals) '()))
+          ((eq? vals '()) (error TFA vars vals))
           (else
             (cons (cons (car vars)
                         (car vals))
@@ -1675,7 +1681,7 @@
 
 (define lookup
   (lambda (sym env)
-    (cond ((eq? env '()) (error UBV))
+    (cond ((eq? env '()) (error UBV env))
           (else
             ((lambda (vcell)
                (cond ((eq? vcell '())
@@ -1691,6 +1697,23 @@
            (car alist))
           (else
             (my-assq sym (cdr alist))))))
+
+; Y = (lambda (f)
+;       ((lambda (x) (f (x x)))
+;        (lambda (x) (f (x x)))))
+
+; (Y F) = (F (Y F))
+
+;;; 实现一个语言特性 -- 允许过程有任意多个参数
+;;; 首先要考虑一种语法表示方式
+;;; (lambda (x . y)
+;;;   ; u 表示点后面的参数
+;;;   (map (lambda (u) (* x u))
+;;;        y)
+;;;   x required
+;;;   many args y will be the list of them
+;;; (lambda x x) = list
+;;; 通过修改元循环器实现上面语法特性 (特性 1.1)
 
 
 ;;; -------------------------- TODO --------------------------------
