@@ -1628,11 +1628,18 @@
        (evcond (cdr expr) env))
       ;;; *** default combination ***
       (else
-        (my-apply (my-eval (car env) env)
-                  (evlist (cdr expr) env)
-                  ;;; 调用时获取调用者的环境
-                  ; env ;;; 实现动态绑定 1.2
-                  )))))
+        ; (my-apply (my-eval (car env) env)
+        ;           (evlist (cdr expr) env)
+        ;           ;;; 调用时获取调用者的环境
+        ;           ; env ;;; 实现动态绑定 1.2
+        ;           )))))
+        ;;; 特性 1.3 延迟求值
+        ;;; (delay e) => (lambda () e)
+        ;;; (force e) => (e)
+        (my-apply (undelay (my-eval (car epxr)
+                                    env))
+                  (cdr expr)
+                  env)))))
 
 (define my-apply
   (lambda (proc args)
@@ -1640,31 +1647,75 @@
     (cond ((primitive? proc)
            (apply-primop proc args))
           ((eq? (car proc) 'closure)
-           ;;; proc = (LAMBDA bvrs body)
-           (my-eval (cadadr proc)         ;;; body
-                    (bind (caadr proc)    ;;; bvrs
-                          args
-                          (caddr proc))))
-                          ; env))         ;;; env 实现动态绑定 1.2
+           ; ;;; proc = (LAMBDA bvrs body)
+           ; (my-eval (cadadr proc)         ;;; body
+           ;          (bind (caadr proc)    ;;; bvrs
+           ;                args
+           ;                (caddr proc))))
+           ;                ; env))         ;;; env 实现动态绑定 1.2
+           ;;; 特性 1.3 延迟求值
+           ;;; proc = (CLOSURE (bvrs body) env)
+           (my-eval (cadadr proc)                 ;;; body
+                    (bind (vnames (caadr proc))
+                          (gevlint (caadr proc)
+                                   ops
+                                   env)
+                          (caddr proc))))         ;;; env
           (else "error"))))
 
 (define evlist
   (lambda (l env)
     (cond ((eq? l '()) '())
           (else
-            (cons (eval (car l) env)
+            ; (cons (eval (car l) env)
+            ;;; 特性 1.3 延迟求值
+            (cons (undelay (eval (car l) env))
                   (evlist (cdr l) env))))))
+
+(define gevlist
+  (lambda (vars exps env)
+    (cond
+      ((eq? exps '()) '())
+      ((symbol? (car vars)) ;;; applicative
+       (cons (my-eval (car exps) env)
+             (gevlist (cdr vars)
+                      (cdr exps)
+                      env)))
+      ((eq? (caar vars) 'name)
+       (cons (make-delay (car exps) env)
+             (gevlist (cdr vars)
+                      (cdr exps)
+                      env)))
+      (else error-unknown-declaration))))
 
 (define evcond
   (lambda (clauses env)
-    (cond ((eq? clauses '()) '())
+    (cond ((eq? clauses '()) '())             ;;; arbitrary
           ((eq? (caar clauses) 'else)
            (my-eval (cadar clauses) env))
-          ((false? (my-eval (caar clauses) env))
+          ;;; 特性 1.3 延迟求值
+          ((false? (undelay
+                     (my-eval (caar clauses)
+                              env)))
            (evcond (cdr clauses) env))
           ;;; true
           (else
             (my-eval (cadar clauses) env)))))
+
+(define false? (lambda (x) (eq? x '())))
+
+(define make-delay
+  (lambda (expr env)
+    (cons 'thunk (cons expr env))))
+
+(define (undelay v)
+  (cond ((pair? v)
+         (cond ((eq? (car v) 'thunk)
+                (undelay
+                  (my-eval (cadr thunk)
+                           (cddr thunk))))
+               (else v)))
+        (else v)))
 
 (define bind
   (lambda (vars vals env)
@@ -1730,7 +1781,22 @@
 ;;; 实现上需要修改 eval 和 apply
 ;;; 缺点: 破话了模块性, 一个人代码中的名字会影响到另一个人
 
+;;; 延迟求值 (特性 1.3)
+;;; 为了通过 cond 实现 if (或 unless), 需要这样的语言特性
+(define (my-unless p c a)
+  (cond ((not p) c)
+        (else a)))
 
+; (display-newline (my-unless (= 1 0) 2 (/ 1 0)))
+;;; 应用序 -- 代换模型, 就会报错
+
+;;; 设计思路
+;;; 首先得标记处 c 和 a 是特殊的, 不要在 apply 的时候就求值
+;;; 然后考虑如何标记, 注意要避免已有语法产生歧义
+
+; (define (my-unless p (name c) (name a))
+;   (cond ((not p) c)
+;         (else a)))
 
 
 ;;; -------------------------- TODO --------------------------------
