@@ -1621,20 +1621,31 @@
       ;;; (lambda (x) (+ x y)) --> (closure ((x) (+ x y)) <env>)
       ((eq? (car expr) 'lambda)
        (list 'closure (cdr expr) env))
+       ;;; 不需要在定义时捕获外部环境
+       ; expr)  ;;; 实现动态绑定 1.2
       ;;; (cond (p1 e1) (p2 e2) (p3 e3) ...)
       ((eq? (car expr) 'cond)
        (evcond (cdr expr) env))
       ;;; *** default combination ***
       (else
         (my-apply (my-eval (car env) env)
-                  (evlist (cdr expr) env))))))
+                  (evlist (cdr expr) env)
+                  ;;; 调用时获取调用者的环境
+                  ; env ;;; 实现动态绑定 1.2
+                  )))))
 
 (define my-apply
   (lambda (proc args)
-    (cond ((primitive? proc) (apply-primop proc args))
+  ; (lambda (proc args) ;;; 实现动态绑定 1.2
+    (cond ((primitive? proc)
+           (apply-primop proc args))
           ((eq? (car proc) 'closure)
-           (my-eval (cadadr proc)
-                    (bind (caadr proc) args (caddr proc))))
+           ;;; proc = (LAMBDA bvrs body)
+           (my-eval (cadadr proc)         ;;; body
+                    (bind (caadr proc)    ;;; bvrs
+                          args
+                          (caddr proc))))
+                          ; env))         ;;; env 实现动态绑定 1.2
           (else "error"))))
 
 (define evlist
@@ -1714,6 +1725,12 @@
 ;;;   many args y will be the list of them
 ;;; (lambda x x) = list
 ;;; 通过修改元循环器实现上面语法特性 (特性 1.1)
+
+;;; 动态绑定 (特性 1.2)
+;;; 实现上需要修改 eval 和 apply
+;;; 缺点: 破话了模块性, 一个人代码中的名字会影响到另一个人
+
+
 
 
 ;;; -------------------------- TODO --------------------------------
