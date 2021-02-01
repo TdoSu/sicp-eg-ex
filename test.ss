@@ -1798,6 +1798,61 @@
 ;   (cond ((not p) c)
 ;         (else a)))
 
+;;; 逻辑程序设计语言 (Prolog)
+;;; 什么是真的, 检测它是不是真的, 找出那些真的
+
+; (job (Bitdiddle Ben) (computer wizard))
+; (salary (Bitdiddle Ben) 40000)
+; (supervisor (Bitdiddle Ben) (Warbucks Oliver))
+; (address (Bitdiddle Ben) (Slunerville (Ridge Road) 10))
+
+; (address (Hacker Alyssa P) (Cambridge (Mass Ave) 78))
+; (job (Hacker Alyssa P) (compter programmer))
+; (salary (Hacker Alyssa P) 35000)
+; (supervisor (Hacker Alyssa P) (Bitdiddle Ben))
+
+; (address (Tweakit Lem E) (Boston (Bay State Road) 22))
+; (job (Tweakit Lem E) (compter technician))
+; (salary (Tweakit Lem E) 15000)
+; (supervisor (Tweakit Lem E) (Bitdiddle Ben))
+
+; (address (Reasoner Louis) (Slumerville (Pine Tree Road) 80))
+; (job (Reasoner Louis) (compter programmer trainee))
+; (salary (Reasoner Louis) 20000)
+; (supervisor (Reasoner Louis) (Hacker Alyssa P))
+
+; (address (Warbucks Oliver) (Swellesley (The Manor)))
+; (job (Warbucks Oliver) (administration big wheel))
+; (salary (Warbucks Oliver) 100000)
+
+;;; primitive -- query
+;;; combination -- and, not, or, list-value
+;;; abstraction -- rules
+
+; (and (job ?x (computer . ?y))
+;      (supervisor ?x ?z))
+;;; List all people who work in the computer division,
+;;; together with their supervisor.
+
+; (and (salary ?p ?a)
+;      (list-value > ?a 30000))
+;;; List all people whose salary is greater than 30000.
+
+; (and (job ?x (computer . ?y))
+;      (not (and (supervisor ?x ?z)
+;                (job ?z (computer . ?w)))))
+;;; List all people who work in the computer division,
+;;; who do not have a supervisor who works in the computer division.
+
+; (rule
+;   (bigshot ?x ?dept)                    ;;; rule conclustion
+;   (and
+;     (job ?x (?dept . ?y))
+;     (not (and (supervisor ?x ?z)
+;               (job ?z (?dept . ?w)))))) ;;; rule body
+
+;; 没有 body 的 rule 总是真的
+
 
 ;;; -------------------------- TODO --------------------------------
 
