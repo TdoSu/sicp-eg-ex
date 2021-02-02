@@ -1853,6 +1853,59 @@
 
 ;; 没有 body 的 rule 总是真的
 
+;;; 两个逻辑上相同的规则, 1个可以查询出结果, 1个却会陷入死循环
+;;; and or 并不等同于逻辑中的 and or
+
+; (rule (outranked-by ?s ?b)
+;       (or (supervisor ?s ?b)
+;           (and (supervisor ?s ?m)
+;                (outranked-by ?m ?b))))
+
+; (rule (outranked-by ?s ?b)
+;       (or (supervisor ?s ?b)
+;           (and (outranked-by ?m ?b)
+;                (supervisor ?s ?m))))
+
+;;; not 表示不能从数据库中推测出, 而不是经典意义上的 "非真"
+;;; closed world assumption
+
+(define (gcd a b)
+  (if (= b 0)
+      a
+      (gcd b (remainder a b))))
+
+; (display-newline (gcd (* 13 2 7) (* 2 9 7)))
+
+; (define-machine gcd
+;   (registers a b t)
+;   (controller
+;     LOOP (branch (zero? (fetch b)) DONE)
+;          (assign t (remainder (fetch a) (fetch b)))
+;          (assign a (fetch b))
+;          (assign b (fetch t))
+;          (goto LOOP)
+;     DONE))
+
+;;; IO form
+; (define-machine gcd
+;   (register a b t)
+;   (controller
+; MAIN (assign a (read))
+;      (assign b (read))
+; LOOP (branch (zero? (fetch b)) DONE)
+;      (assign t
+;        (remainder (fetch a) (fetch b)))
+;      (assign a (fetch b))
+;      (assign b (fetch t))
+;      (goto LOOP)
+; DONE (perform (print (fetch a)))
+;      (goto MAIN)))
+
+(define (remainder n d)
+  (if (< n d)
+      n
+      (remainder (- n d) d)))
+
 
 ;;; -------------------------- TODO --------------------------------
 
