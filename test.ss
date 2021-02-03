@@ -1926,6 +1926,40 @@
 ;      (goto (fetch CONTINUE))
 ; DON
 
+(define (fib n)
+  (if (< n 1)
+      n
+      (+ (fib (- n 1)) (- n 2))))
+
+;;; 这意味着我们有一个 babel 叫 fib-done, 走到这里机器就停止了
+; (assign continue FIB-DONE)
+; ; 在 loop 启动计算
+; FIB-LOOP ; n contains arg, continue is recipient.
+;   (branch (< (fetch n) 2) IMMEDIATE-ANSWER)
+;   ; 保存 continue 然后用 continue 记录要返回的位置
+;   (save continue)
+;   (assign continue AFTER-FIB-N-1)
+;   (save n)
+;   (assign n (- (fetch n) 1))
+;   (goto FIB-LOOP)
+; AFTER-FIB-N-1
+;   (restore n)
+;   ;; (restore continue)
+;   (assign n (- (fetch n) 2))
+;   ;; (save continue)
+;   (assign continue AFTER-FIB-N-2)
+;   (save val)
+;   (goto FIB-LOOP)
+; AFTER-FIB-N-2
+;   (assign n (fetch val)) ; fib(n-2)
+;   (restore val)
+;   (restore continue)
+;   (assign val (+ (fetch val) (fetch n)))
+;   (goto (fetch continue))
+; IMMEDIATE-ANSWER
+;   (assign val (fetch n))
+;   (goto (fetch continue))
+; FIB-DONE
 
 
 ;;; -------------------------- TODO --------------------------------
