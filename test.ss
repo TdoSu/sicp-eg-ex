@@ -1906,8 +1906,30 @@
       n
       (remainder (- n d) d)))
 
+(define (fact n)
+  (if (= n 1)
+      1
+      (* n (fact (- n 1)))))
+
+; (assign continue DONE)
+; LOOP (branch (= 1 (fetch n)) BASE)
+;      (save CONTINUE)
+;      (save n)
+;      (assign n (-1+ (fetch n)))
+;      (assign CONTINUE AFT)
+;      (goto LOOP)
+; AFT (restore n)
+;     (restore CONTINUE)
+;     (assign val (* (fetch n) (fetch val)))
+;     (goto (fetch CONTINUE))
+; BASE (assign val (fetch n))
+;      (goto (fetch CONTINUE))
+; DON
+
+
 
 ;;; -------------------------- TODO --------------------------------
 
 (exit)
+
 
