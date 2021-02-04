@@ -1962,6 +1962,69 @@
 ; FIB-DONE
 
 
+;;; Register usage in evaluator machine
+;;; ---------------------------------------------
+;;; EXP       expression to be evaluated
+;;; ENV       evaluation environment
+;;; FUN       procedure to be applied
+;;; ARGL      list of evaluated arguments
+;;; CONTINUE  place to go to next
+;;; VAL       result of evaluation
+;;; UNEV      temporary register for expression
+
+;;; Sample evaluator-machine operations
+;;; ------------------------------------------------
+;;; (assign val (fetch exp))
+;;; (branch (conditional? (fetch exp))
+;;;         ev-cond)
+;;; (assign exp (first-clause (fetch exp)))
+;;; (assign val (loop-variable-value (fetch exp) (fetch env)))
+
+(define (my-eval expr env)
+  (cond ((self-evaluating? expr) expr)
+        ((quoted? expr)
+         (text-of-quotation expr))
+        ; <... more special forms ...>
+        ((application? expr)
+         (my-apply
+           (my-eval (operator expr) (env))
+           (list-of-values (operands expr)
+                           env)))
+        (else
+          (error "Unknown expression" expr))))
+
+(define (my-apply proc args)
+  (cond ((primitive-proc? proc)
+         (primitive-apply proc args))
+        ((compound-proc? proc)
+         (eval-sequence
+           (proc-body proc)
+           (extend-environment
+             (parameters proc)
+             args
+             (proc-environment proc))))
+        (else
+          (error "Unknown proc type" proc))))
+
+;;; Contract that eval-dispatch fulfills
+;;; -------------------------------------------------------------
+;;; - The EXP register holds an expression to be evaluated.
+;;; - The ENV register holds the environment in which the expression
+;;;   is to be evaluated.
+;;; - The CONTINUED register holds a place to go to next.
+;;; - The result will be left in the VAL register.
+;;;   Contents of all other registers may be destroyed.
+
+;;; Contract that apply-dispatch fulfills
+;;; -------------------------------------------------------------
+;;; - The ARGL register contains a list of arguments.
+;;; - The FUN register contains a procedure to be applied.
+;;; - The top of the STACT holds a place to go to next.
+;;; - The result will be left in the VAL register.
+;;;   The stack will be popped.
+;;;   Contents of all other registers may be destroyed.
+
+
 ;;; -------------------------- TODO --------------------------------
 
 (exit)
