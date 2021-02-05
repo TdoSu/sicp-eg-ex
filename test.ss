@@ -1,9 +1,4 @@
-(define (display-newline . msgs)
-  (if (null? msgs)
-      (newline)
-      (begin (display (car msgs))
-             (display " ")
-             (apply display-newline (cdr msgs)))))
+(load "utils.ss")
 
 (define (interval start end step)
   (if (> start end)
