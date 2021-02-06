@@ -23,6 +23,22 @@
         (try (improve guess))))
   (try 1.0))
 
+;;; 改进版本2
+;;; 比较两次迭代 guess 的变化
+;;; 有点不动点的味道了
+
+(define (sqrt x)
+  (define (good-enough? guess)
+    ;;; TODO 定义一个 distance 抽象这个过程
+    (< (abs (- (/ (improve guess) guess) 1.0)) 0.0001))
+  (define (improve guess)
+    (average guess (/ x guess)))
+  (define (try guess)
+    (if (good-enough? guess)
+        guess
+        (try (improve guess))))
+  (try 1.0))
+
 (display-newline (sqrt (square 0.00001)))
 ; > 1.0e-5
 
