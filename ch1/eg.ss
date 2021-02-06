@@ -111,6 +111,9 @@
 ;;; 两个特殊的过程 if cond
 ;;; 注意 and or 也是特殊形式, 不是普通的过程, 和 + * 不同
 
+(define (>= x y) (or (> x y) (= x y)))
+(define (>= x y) (not (< x y)))
+
 (display-newline (abs 3))
 (display-newline (abs -3))
 (display-newline (abs 0))
