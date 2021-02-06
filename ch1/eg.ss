@@ -118,5 +118,21 @@
 (display-newline (abs -3))
 (display-newline (abs 0))
 
+(define (average a b) (/ (+ a b) 2))
+
+;;; 牛顿逐步逼近法求平方根
+(define (sqrt x)
+  (define (good-enough? guess)
+    (< (abs (- (square guess) x)) 0.0001))
+  (define (improve guess)
+    (average guess (/ x guess)))
+  (define (try guess)
+    (if (good-enough? guess)
+        guess
+        (try (improve guess))))
+  (try 1.0))
+
+(display-newline (sqrt (square 3)))
+
 (exit)
 
