@@ -62,5 +62,52 @@
 ;;; 迭代过程是其状态可以用固定数目的变量描述的计算过程.
 ;;; 同时有一套规则可以描述从上一个状态到下一个状态的变化.
 
+;;; 树形递归
+
+(define (fib n)
+  (cond ((= n 0) 0)
+        ((= n 1) 1)
+        (else (+ (fib (- n 1)) (fib (- n 2))))))
+
+(display-newline (fib 5))
+; (fib 5)
+; (+ (fib 4) (fib 3))
+; (+ (+ (fib 3) (fib 2)) (+ (fib 2) (fib 1)))
+; (+ (+ (+ (fib 2) (fib 1)) (+ (fib 1) (fib 0)))
+;    (+ (+ (fib 1) (fib 0)) (fib 1)))
+; (+ (+ (+ (+ (fib 1) (fib 0)) (fib 1)) (+ (fib 1) (fib 0)))
+;    (+ (+ (fib 1) (fib 0)) (fib 1)))
+; (+ (+ (+ (+ 1 0) 1) (+ 1 0)) (+ (+ 1 0) 1))
+; (+ (+ (+ (+ 1 0) 1) (+ 1 0)) (+ 1 1))
+; (+ (+ (+ (+ 1 0) 1) (+ 1 0)) 2)
+; (+ (+ (+ (+ 1 0) 1) 1) 2)
+; (+ (+ (+ 1 1) 1) 2)
+; (+ (+ 2 1) 2)
+; (+ 3 2)
+; 5
+; 每次 n 加 1 会导致 fib(n-2) 被重新计算一次
+
+;;; fib 的迭代实现
+;;; a <-- a + b
+;;; b <-- a
+;;; a, b, counter 三个状态变量的迭代
+
+(define (fib n)
+  (define (iter a b counter)
+    (if (= counter n)
+        b
+        (iter (+ a b) a (+ 1 counter))))
+  (iter 1 0 0))
+
+(display-newline (fib 5))
+; (fib 5)
+; (iter 1 0 0)
+; (iter 1 1 1)
+; (iter 2 1 2)
+; (iter 3 2 3)
+; (iter 5 3 4)
+; (iter 8 5 5)
+; 5
+
 (exit)
 
