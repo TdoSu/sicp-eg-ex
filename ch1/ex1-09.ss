@@ -5,12 +5,16 @@
 (define (inc x) (+ x 1))
 (define (dec x) (- x 1))
 
-(define (+ x y)
+(define (plus-1 x y)
   (if (= x 0)
       y
-      (inc (+ (dec x) y))))
+      (inc (plus-1 (dec x) y))))
 
-(display-newline (+ 3 4))
+;;; 可以用 trace 追踪函数调用过程
+
+(trace plus-1)
+
+(display-newline (plus-1 3 4))
 
 ; (+ 3 4)
 ; (inc (+ 2 4))
@@ -22,12 +26,14 @@
 ; 7
 ; 这是一个递归计算过程
 
-(define (+ x y)
+(define (plus-2 x y)
   (if (= x 0)
       y
-      (+ (dec x) (inc y))))
+      (plus-2 (dec x) (inc y))))
 
-(display-newline (+ 3 4))
+(trace plus-2)
+
+(display-newline (plus-2 3 4))
 
 ; (+ 3 4)
 ; (+ 2 5)
