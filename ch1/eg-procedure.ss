@@ -138,7 +138,7 @@
 
 ;;; 快速幂
 
-;;; 递归实现
+;;; 递归实现 O(log(n))
 
 (define (fast-expt b n)
   (cond ((= n 0) 1)
@@ -147,7 +147,7 @@
 
 (display-newline (fast-expt 2 10))
 
-;;; GCD -- 辗转相除法
+;;; GCD -- 辗转相除法 O(log(n))
 
 (define (gcd a b)
   (if (= b 0)
@@ -157,6 +157,25 @@
 (display-newline (gcd (* 3 17 29 5) (* 5 17)))
 
 ;;; 素数检测
+
+;;; 寻找最小因子 O(sqrt(n))
+
+(define (smallest-divisor n)
+  (find-divisor n 2))
+
+(define (find-divisor n test-divisor)
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        (else (find-divisor n (+ test-divisor 1)))))
+
+(define (divides? a b) (= (remainder b a) 0))
+
+(define (prime? n)
+  (and (> n 1) (= (smallest-divisor n) n)))
+
+;;; 费马检测 O(log(n))
+
+
 
 (exit)
 
