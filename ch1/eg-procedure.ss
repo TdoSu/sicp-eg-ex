@@ -147,7 +147,14 @@
 
 (display-newline (fast-expt 2 10))
 
-;;; GCD
+;;; GCD -- 辗转相除法
+
+(define (gcd a b)
+  (if (= b 0)
+      a
+      (gcd b (remainder a b))))
+
+(display-newline (gcd (* 3 17 29 5) (* 5 17)))
 
 ;;; 素数检测
 
