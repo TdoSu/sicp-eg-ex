@@ -175,7 +175,50 @@
 
 ;;; 费马检测 O(log(n))
 
+;;; 如果 p 那么 q === 不存在 p 并且 非q 的情况
+(define (if-then? p q) (not (and p (not q))))
 
+; 费马小定理:
+; 如果 n 是一个素数, a 是小于 n 的任意正整数, 那么 a 的 n 次方与 a 模 n 同余.
+; (lambda (a)
+;   (if-then? (and (prime? n) (integer? a) (< a n))
+;             (= (remainder (exp a n) n) (remainder a n))))
+; --> #t 永远为真
+
+;;; 计算一个数的幂对另一个数求余数
+;;; 这里利用了 remainder 的一个特点
+;;; (lambda (a b)
+;;;   (= (remainder a b) (remainder (remainder a b) b)))
+;;; --> #t 永远为真
+;;; 这样就可以在求幂的过程中, 用 remainder 缩小 a 的值
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder (square (expmod base (/ exp 2) m))
+                    m))
+        (else
+          (remainder (* base (expmod base (- exp 1) m))
+                     m))))
+
+; (display-newline (expmod 2 3 3))
+
+;;; 因为 (< a n) 是 #t 所以费马检测等价于
+;;; 1 ~ (- n 1) 之间所有整数的 n 次幂对 n 求余数都等于 a
+
+(define (fermat-test n)
+  (define (try-it a)
+    (= (expmod a n n) a))
+  ; (random x) --> a nonnegative pseudo-random number less than x
+  ; x 是整数得到的就是整数, x 是小数得到的就是小数
+  (try-it (+ 1 (random (- n 1)))))
+
+(define (fast-prime? n times)
+  (cond ((= times 0) #t)
+        ((fermat-test n) (fast-prime? n (- times 1)))
+        (else #f)))
+
+(display-newline (fast-prime? 13 10))
+(display-newline (fast-prime? (* 13 17) 10))
 
 (exit)
 
