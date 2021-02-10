@@ -68,3 +68,5 @@
         ((fermat-test n) (fast-prime? n (- times 1)))
         (else #f)))
 
+(define (cube x) (* x x x))
+
