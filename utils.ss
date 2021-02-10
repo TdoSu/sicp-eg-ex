@@ -47,3 +47,24 @@
 (define (prime? n)
   (and (> n 1) (= (smallest-divisor n) n)))
 
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder (square (expmod base (/ exp 2) m))
+                    m))
+        (else
+          (remainder (* base (expmod base (- exp 1) m))
+                     m))))
+
+(define (fermat-test n)
+  (define (try-it a)
+    (= (expmod a n n) a))
+  ; (random x) --> a nonnegative pseudo-random number less than x
+  ; x 是整数得到的就是整数, x 是小数得到的就是小数
+  (try-it (+ 1 (random (- n 1)))))
+
+(define (fast-prime? n times)
+  (cond ((= times 0) #t)
+        ((fermat-test n) (fast-prime? n (- times 1)))
+        (else #f)))
+
