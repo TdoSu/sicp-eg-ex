@@ -87,3 +87,12 @@
           (try next))))
   (try first-guess))
 
+(define (cont-frac n d k)
+  (define (iter counter result)
+    (if (= counter 1)
+        result
+        (iter (- counter 1)
+              (/ (n (- counter 1))
+                 (+ (d (- counter 1)) result)))))
+  (iter k (/ (n k) (d k))))
+
