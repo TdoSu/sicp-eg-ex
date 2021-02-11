@@ -79,5 +79,73 @@
  2
  3)
 
+;;; 过程抽象 -- 让操作不依赖于具体的操作对象, 也不依赖于具体实现
+;;; (* 3 3 3) (* 4 4 4) (* 3.14 3.14 3.14)
+;;; 抽象成 (lambda (x) (* x x x)), x 可以指代任何数值.
+;;; 另一个方面 (cube 3) (cube 4) (cube 5)
+;;; (define cube (lambda (x (* x x x))))
+;;; (define cube (lambda (x (* (square x) x))))
+;;; (define cube (lambda (x (expt x 3))))
+;;; 不依赖与 cube 具体怎么写, 将怎么实现和怎么用分离开!
+
+;;; 通过区间折半查找, 找方程的根
+(define (search f neg-point pos-point)
+  (define (close-enough? x y) (< (abs (- x y)) 0.001))
+  (let ((midpoint (average neg-point pos-point)))
+    (if (close-enough? neg-point pos-point)
+        midpoint
+        (let ((test-value (f midpoint)))
+          (cond ((positive? test-value) (search f neg-point midpoint))
+                ((negative? test-value) (search f midpoint pos-point))
+                (else midpoint))))))
+
+(define (half-interval-method f a b)
+  (let ((a-value (f a))
+        (b-value (f b)))
+    (cond ((and (negative? a-value) (positive? b-value))
+           (search f a b))
+          ((and (positive? a-value) (negative? b-value))
+           (search f b a))
+          (else (error 'arguments "Values are not of opposite sign" a b)))))
+
+(display-newline (half-interval-method sin 2.0 4.0))
+
+(display-newline (half-interval-method
+                   (lambda (x) (- (cube x) (* 2 x) 3))
+                   1.0
+                   2.0))
+
+;;; 寻找函数不动点
+(define (fixed-point f first-guess)
+  (define tolerance 0.00001)
+  (define (close-enough? x y)
+    (< (abs (- x y)) tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (if (close-enough? guess next)
+          next
+          (try next))))
+  (try first-guess))
+
+(display-newline (fixed-point cos 1.0))
+
+(display-newline (fixed-point (lambda (y) (+ (sin y) (cos y)))
+                              1.0))
+
+;;; 用不定点实现求平方根
+;;; 直接计算 (lambda (y) (/ x y)) 是不收敛的
+(define (sqrt x)
+  (fixed-point (lambda (y) (average y (/ x y)))
+               1.0))
+
+(display-newline (sqrt (square 3.0)))
+
+;;; 过程作为返回值
+
+;;; 平均阻尼
+
+;;; 牛顿法
+
+
 (exit)
 
