@@ -96,3 +96,14 @@
                  (+ (d (- counter 1)) result)))))
   (iter k (/ (n k) (d k))))
 
+(define (newton-method g guess)
+  (define (newton-transform g)
+    (define (deriv g)
+      (let ((dx 0.00001))
+        (lambda (x)
+          (/ (- (g (+ x dx)) (g x))
+             dx))))
+  (lambda (x)
+    (- x (/ (g x) ((deriv g) x)))))
+  (fixed-point (newton-transform g) guess))
+
