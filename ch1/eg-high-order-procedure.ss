@@ -144,8 +144,54 @@
 
 ;;; 平均阻尼
 
-;;; 牛顿法
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
 
+(define (cube-root x)
+  (fixed-point (average-damp (lambda (y) (/ x (square y))))
+               1.0))
+
+(display-newline (cube-root (cube 3.0)))
+
+;;; 牛顿法
+;;; 如果 x -> g(x) 可微
+;;; 那么 g(x) = 0 的一个解就是 x -> f(x) 的一个不动点
+;;; 其中 f(x) = x - (g(x) / Dg(x))
+
+;;; 先搞个求导函数
+(define (deriv g)
+  (let ((dx 0.00001))
+    (lambda (x)
+      (/ (- (g (+ x dx)) (g x))
+         dx))))
+
+(display-newline ((deriv cube) 5))
+
+;;; 牛顿法表述 g -> f
+(define (newton-transform g)
+  (lambda (x)
+    (- x (/ (g x) ((deriv g) x)))))
+
+;;; 用牛顿法描述求方程的根
+(define (newton-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+;;; 用牛顿法实现求 sqrt
+(define (sqrt x)
+  (fixed-point (newton-transform (lambda (y) (- x (square y)))) 1.0))
+
+(display-newline (sqrt (square 3)))
+
+;;; 更一般的求不动点过程
+
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
+
+;;; 过程作为第一级公民
+;;; 1. 可以被命名
+;;; 2. 可以作为参数传递给过程
+;;; 3. 可以作为过程的返回值
+;;; 4. 可以作为其他数据结构的一部分
 
 (exit)
 
