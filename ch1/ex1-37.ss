@@ -20,8 +20,8 @@
     (if (= counter 1)
         result
         (iter (- counter 1)
-              (/ (n counter)
-                 (+ (d counter) result)))))
+              (/ (n (- counter 1))
+                 (+ (d (- counter 1)) result)))))
   (iter k (/ (n k) (d k))))
 
 
