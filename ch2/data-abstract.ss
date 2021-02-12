@@ -111,5 +111,7 @@
 (define (lower-bound i) (car i))
 (define (upper-bound i) (cdr i))
 
+(define (width-interval i) (/ (- (upper-bound i) (lower-bound i)) 2))
+
 (exit)
 
