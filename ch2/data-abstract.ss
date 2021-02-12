@@ -138,5 +138,16 @@
 ; (print-interval (div-interval i1 i2))
 ; (newline)
 
+;;; 中心 - 误差量的区间
+
+(define (make-interval-width c w)
+  (make-interval (- c w) (+ c w)))
+
+(define (center i)
+  (average (lower-bound i) (upper-bound i)))
+
+(define (width i)
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
 (exit)
 
