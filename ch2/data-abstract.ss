@@ -103,15 +103,40 @@
                    (max p1 p2 p3 p4))))
 
 (define (div-interval x y)
-  (mul-interval x
-                (make-interval (/ 1.0 (upp-bound y))
-                               (/ 1.0 (lower-bound y)))))
+  (if (0-in-interval? y)
+      (error 'arguments "除区间不应该跨越 0")
+      (mul-interval x
+                    (make-interval (/ 1.0 (upp-bound y))
+                                   (/ 1.0 (lower-bound y))))))
 
 (define (make-interval a b) (cons a b))
 (define (lower-bound i) (car i))
 (define (upper-bound i) (cdr i))
 
 (define (width-interval i) (/ (- (upper-bound i) (lower-bound i)) 2))
+
+(define (print-interval i)
+  (begin (display "[")
+         (display (lower-bound i))
+         (display ", ")
+         (display (upper-bound i))
+         (display "]")))
+
+(define (0-in-interval? i)
+  (and (<= (lower-bound i) 0)
+       (>= (upper-bound i) 0)))
+
+(define i1 (make-interval 1 2))
+(define i2 (make-interval 0 3))
+
+(print-interval (add-interval i1 i2))
+(newline)
+(print-interval (sub-interval i1 i2))
+(newline)
+(print-interval (mul-interval i1 i2))
+(newline)
+; (print-interval (div-interval i1 i2))
+; (newline)
 
 (exit)
 
