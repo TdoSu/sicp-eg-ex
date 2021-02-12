@@ -57,5 +57,32 @@
 (print-rat (add-rat one-third one-third))
 (newline)
 
+;;; 数据意味着什么
+;;; 一般而言数据是
+;;; 一组构造函数和选择函数,
+;;; 以及它们应该满足的特定条件。
+
+;;; 比如有理数
+;;; 构造函数 (make-rat n d) 选择函数 (numer r) (denom r)
+;;; 条件 (= (/ n d) (/ (numer (make-rat n d)) (denom (make-rat n d))))
+;;; 的值永远为 #t.
+
+;;; 序对的定义
+;;; 构造函数 cons 选择函数 car cdr
+;;; 条件 (and (= x (car (cons x y))) (= y (cdr (cons x y)))) 的值永远是 #t
+
+;;; 序对的一个实现
+(define (cons x y)
+  (define (dispatch m)
+    (cond ((= m 0) x)
+          ((= m 1) y)
+          (else (error 'arguments "Argument not 0 or 1 -- CONS" m))))
+  dispatch)
+(define (car z) (z 0))
+(define (cdr z) (z 1))
+
+(display-newline (car (cons 3 4)))
+(display-newline (cdr (cons 3 4)))
+
 (exit)
 
