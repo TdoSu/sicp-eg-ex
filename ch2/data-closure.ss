@@ -47,5 +47,14 @@
 
 (display-newline (append (list 1 3 5) (list 2 4)))
 
+;;; map 的实现
+
+(define (map proc items)
+  (if (null? items)
+      '()
+      (cons (proc (car items)) (map proc (cdr items)))))
+
+(display-newline (map square (list 1 2 3 4 5)))
+
 (exit)
 
