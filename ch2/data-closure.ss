@@ -56,5 +56,20 @@
 
 (display-newline (map square (list 1 2 3 4 5)))
 
+;;; 求树的叶子数
+
+(define (count-leaves tree)
+  (cond ((null? tree) 0)
+        ((not (pair? tree)) 1)
+        (else (+ (count-leaves (car tree))
+                 (count-leaves (cdr tree))))))
+
+(define x (cons (list 1 2) (list 3 4)))
+;;; ((1 2) 3 4)
+(display-newline (length x))
+(display-newline (count-leaves x))
+(display-newline (length (list x x)))
+(display-newline (count-leaves (list x x)))
+
 (exit)
 
