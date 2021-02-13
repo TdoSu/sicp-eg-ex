@@ -90,5 +90,99 @@
 (display-newline (scale-tree (list 1 (list 2 (list 3 4) 5) (list 6 7))
                              10))
 
+;;; 序列作为约定的界面
+
+;;; 求树中奇数叶子的平方和
+(define (sum-odd-squares tree)
+  (cond ((null? tree) 0)
+        ((not (pair? tree))
+         (if (odd? tree) (square tree) 0))
+        (else (+ (sum-odd-squares (car tree))
+                 (sum-odd-squares (cdr tree))))))
+
+(define (fib n)
+  (cond ((= n 0) 0)
+        ((= n 1) 1)
+        (else (+ (fib (- n 1)) (fib (- n 2))))))
+
+;;; 所有偶数斐波那契数
+(define (even-fibs n)
+  (define (next k)
+    (if (> k n)
+        '()
+        (let ((f (fib k)))
+          (if (even? f)
+              (cons f (next (+ k 1)))
+              (next (+ k 1))))))
+  (next 0))
+
+;;; sum-odd-squares 和 even-fibs 将 生成数据, 映射, 过滤, 收集 这些操作混在了一起,
+;;; 可以采用统一的数据切面分隔这些操作.
+
+(define (map proc items)
+  (if (null? items)
+      '()
+      (cons (proc (car items))
+            (map proc (cdr items)))))
+
+(define (filter predicate items)
+  (cond ((null? items) '())
+        ((predicate (car items))
+         (cons (car items)
+               (filter predicate (cdr items))))
+        (else
+          (filter predicate (cdr items)))))
+
+(display-newline (filter odd? (list 1 2 3 4 5)))
+
+(define (accumulate op initial items)
+  (if (null? items)
+      initial
+      ;;; 从最右边开始折叠
+      ;;; op 的第一个参数是当前值, 第二个参数是累计值
+      ;;; (op c r)
+      (op (car items)
+          (accumulate op initial (cdr items)))))
+
+(display-newline (accumulate + 0 (list 1 2 3 4 5)))
+(display-newline (accumulate * 1 (list 1 2 3 4 5)))
+(display-newline (accumulate cons '() (list 1 2 3 4 5)))
+
+(define (enumerate-interval low high)
+  (if (> low high)
+      '()
+      (cons low
+            (enumerate-interval (+ low 1) high))))
+
+(display-newline (enumerate-interval 2 7))
+
+(define (enumerate-tree tree)
+  (cond ((null? tree) '())
+        ((not (pair? tree)) (list tree))
+        (else (append (enumerate-tree (car tree))
+                      (enumerate-tree (cdr tree))))))
+
+(display-newline (enumerate-tree (list 1 (list 2 (list 3 4)) 5)))
+
+;;; 用信号流的方式重新构造 sum-odd-squares 和 even-fibs
+
+(define (sum-odd-squares tree)
+  (accumulate +
+              0
+              (map square
+                   (filter odd?
+                           (enumerate-tree tree)))))
+
+(display-newline (sum-odd-squares (list 1 2 (list 3 (list 4 5) 6))))
+
+(define (even-fibs n)
+  (accumulate cons
+              '()
+              (filter even?
+                      (map fib
+                           (enumerate-interval 0 n)))))
+
+(display-newline (even-fibs 10))
+
 (exit)
 
