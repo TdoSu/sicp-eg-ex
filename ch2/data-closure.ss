@@ -184,5 +184,50 @@
 
 (display-newline (even-fibs 10))
 
+;;; 嵌套映射
+
+;;; 给定自然数 n, 找出所有不同的 (i j) 其中 1 <= j < i <= n,
+;;; 并且 i + j 是素数
+
+;;; 思路:
+;;; 1. 找到所有序对 (i j) 
+;;; 2. 过滤出加和是素数的
+;;; 3. 映射成 (i j (+ i j))
+
+(define (prime-sum-pairs n)
+  (map (lambda (p) (list (car p) (cadr p) (+ (car p) (cadr p))))
+       (filter (lambda (p) (prime? (+ (car p) (cadr p))))
+               ;;; accumulate 目的是把里层 map 出来的 list 展开
+               ;;; 所以使用 append
+               (accumulate append
+                           '()
+                           ;;; 外层 map 获取 i
+                           (map (lambda (i)
+                                  ;;; 里层 map 获取 j
+                                  (map (lambda (j) (list i j))
+                                       (enumerate-interval 1 (- i 1))))
+                                (enumerate-interval 1 n))))))
+
+(display-newline (prime-sum-pairs 6))
+
+;;; 数组展开
+(define (flatmap proc seq) (accumulate append '() (map proc seq)))
+
+;;; 求集合的所有排列
+;;; 思路: 对每个元素 x, 生成 S-x 的全排列, 然后 x 放在所有全排列前面
+
+(define (permutations s)
+  (if (null? s)
+      (list '())
+      (flatmap (lambda (x)
+                 (map (lambda (p) (cons x p))
+                      (permutations (remove x s))))
+               s)))
+
+(define (remove x s)
+  (filter (lambda (item) (not (= item x))) s))
+
+(display-newline (permutations (list 1 2 3)))
+
 (exit)
 
