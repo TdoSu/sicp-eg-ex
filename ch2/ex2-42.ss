@@ -56,5 +56,8 @@
 (display-newline (length (queens 8)))
 ; 92
 
+;;; 这个问题的思路和 expmod 很像, 一边生成列表, 一边过滤, 避免了问题规模太大
+;;; 所以加上 safe 之后, 反而比 safe 总为 #t 要快很多.
+
 (exit)
 
