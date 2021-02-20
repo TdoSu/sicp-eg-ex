@@ -1,0 +1,73 @@
+(load "utils.ss")
+
+;;; 扩充符号求导, 实现多个参数的和与积
+
+;;; 描述求导规则
+(define (deriv expr var)
+  (cond ((number? expr) 0)
+        ((variable? expr)
+         (if (same-variable? expr var) 1 0))
+        ((sum? expr)
+         (make-sum (deriv (addend expr) var)
+                   (deriv (augend expr) var)))
+        ((product? expr)
+         (make-sum (make-product (multiplier expr)
+                                 (deriv (multiplicand expr) var))
+                   (make-product (multiplicand expr)
+                                 (deriv (multiplier expr) var))))
+        ((exponentiation? expr)
+         (make-product (exponent expr)
+                       (make-product (make-exponentiation (base expr)
+                                                          (- (exponent expr) 1))
+                                     (deriv (base expr) var))))
+        (else
+          (error 'argument "unknown expression type -- DERIV" expr))))
+
+(define (variable? x) (symbol? x))
+(define (same-variable? v1 v2)
+  (and (variable? v1) (variable? v2) (eq? v1 v2)))
+
+(define (make-sum a1 . a2)
+  (cond ((and (number? a1) (number? (car a2)) (null? (cdr a2)))
+         (+ a1 (car a2)))
+        ((and (number? a1) (= a1 0))
+         (if (null? (cdr a2))
+             (car a2)
+             (cons '+ a2)))
+        ((and (number? (car a2)) (= (car a2) 0))
+         (if (null? (cdr a2))
+             a1
+             (cons '+ (cons a1 (cdr a2)))))
+        (else (cons '+ (cons a1 a2)))))
+(define (sum? x) (and (pair? x) (eq? '+ (car x))))
+(define (addend s) (cadr s))
+(define (augend s)
+  (cond ((null? (cdr (cdr (cdr s)))) (caddr s))
+        (else (cons '+ (cdr (cdr s))))))
+
+(define (make-product m1 . m2)
+  (cond ((and (number? m1) (number? (car m2)) (null? (cdr m2)))
+         (* m1 (car m2)))
+        ((or (and (number? m1) (= m1 0)) (and (number? (car m2)) (= (car m2) 0))) 0)
+        ((and (number? (car m2)) (= (car m2) 1) (null? (cdr m2))) m1)
+        ((and (number? m1) (= m1 1)) (cons '* m2))
+        (else (cons '* (cons m1 m2)))))
+(define (product? x) (and (pair? x) (eq? '* (car x))))
+(define (multiplier p) (cadr p))
+(define (multiplicand p)
+  (cond ((null? (cdr (cdr (cdr p)))) (caddr p))
+        (else (cons '* (cdr (cdr p))))))
+
+(define (make-exponentiation b e)
+  (cond ((and (number? e) (= e 0)) 1)
+        ((and (number? b) (= b 1)) 1)
+        (else (list '** b e))))
+(define (exponentiation? x) (and (pair? x) (eq? '** (car x))))
+(define (base e) (cadr e))
+(define (exponent e) (caddr e))
+
+(display-newline (deriv '(+ x y 3) 'x))
+(display-newline (deriv '(* x y (+ x 3)) 'x))
+
+(exit)
+
