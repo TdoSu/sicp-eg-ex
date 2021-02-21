@@ -77,5 +77,30 @@
 (display-newline (deriv '(* x y) 'x))
 (display-newline (deriv '(* (* x y) (+ x 3)) 'x))
 
+;;; 集合 - 作为未排序的表
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((equal? x (car set)) #t)
+        (else (element-of-set? x (cdr set)))))
+
+(define (adjoin-set x set)
+  (if (not (element-of-set? x set))
+      (cons x set)
+      set))
+
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) '())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1) (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+(define set1 '(1 3 2 a b d 4))
+(define set2 '(4 3 5 d 6))
+(display-newline (element-of-set? 'd set1))
+(display-newline (element-of-set? 'd set2))
+(display-newline (adjoin-set 'f set1))
+(display-newline (intersection-set set1 set2))
+
 (exit)
 
