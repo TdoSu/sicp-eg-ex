@@ -1,15 +1,11 @@
 (load "utils.ss")
 
-(define (adjoin-set set1 set2)
-  (cond ((null? set1) set2)
-        ((null? set2) set1)
-        (else (let ((x1 (car set1))
-                    (x2 (car set2)))
-                (cond ((= x1 x2) (cons x1 (adjoin-set (cdr set1) (cdr set2))))
-                      ((> x1 x2) (cons x2 (adjoin-set set1 (cdr set2))))
-                      ((< x1 x2) (cons x1 (adjoin-set (cdr set1) set2))))))))
+(define (adjoin-set x set)
+  (cond ((= x (car set)) set)
+        ((< x (car set)) (cons x set))
+        ((> x (car set)) (cons (car set) (adjoin-set x (cdr set))))))
 
-(display-newline (adjoin-set '(1 3 4 6 9) '(2 5 8 9 10)))
+(display-newline (adjoin-set 5 '(1 2 3 7 8)))
 
 (exit)
 
