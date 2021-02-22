@@ -102,5 +102,22 @@
 (display-newline (adjoin-set 'f set1))
 (display-newline (intersection-set set1 set2))
 
+;;; 集合 - 作为排序的表
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((> (car set) x) #f)
+        ((= (car set) x) #t)
+        (else (element-of-set? x (cdr set)))))
+
+(define (intersection-set set1 set2)
+  (cond ((= (car set1) (car set2)))
+        (cons (car set1) (intersection-set (cdr set1) (cdr set2))))
+        ((> (car set1) (car set2))
+         (intersection-set set1 (cdr set2)))
+        ((< (car set1) (car set2))
+         (intersection-set (cdr set1) set2)))
+
+
 (exit)
 
