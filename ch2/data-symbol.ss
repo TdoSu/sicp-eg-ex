@@ -199,7 +199,7 @@
       (let ((pair (car pairs)))
         (adjoin-set (make-leaf (car pair)
                                (cadr pair))
-                    (make-leaf-set (cdr pair))))))
+                    (make-leaf-set (cdr pairs))))))
 
 (exit)
 
