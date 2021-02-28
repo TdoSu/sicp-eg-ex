@@ -21,7 +21,39 @@
 
 (define (make-scheme-number n) ((get 'make 'scheme-number) n))
 
-(display-newline "Hello, scheme!")
+;;; 引入类型转换来处理不同类型的数据对象进行运算的问题
+
+(define (scheme-number->complex n)
+  (make-complex-from-real-imag (contents n) 0))
+
+(put-coercion 'scheme-number 'complex scheme-number->complex)
+
+;;; put-coercion 放入一个专门放类型转换的表格中
+
+;;; 在通用操作中引入类型转换
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents arts))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (let ((t1->t2 (get-coercion type1 type2))
+                      (t2->t1 (get-coercion type2 type1)))
+                  (cond (t1->t2
+                          (apply-generic op (t1->t2 a1) a2))
+                        (t2->t1
+                          (apply-generic op a1 (t2->t1 a1)))
+                        (else
+                          (error 'APPLY-GENERIC "No methods for these types" (list op type-args))))))
+              (error 'APPLY-GENERIC "No methods for these types" (list op type-tags)))))))
+
+(define (scheme-number->radio n) (make-radio (contents r) 1))
+(define (radio->complex r) (make-radio (contents r) 0))
 
 (exit)
 
