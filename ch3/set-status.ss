@@ -63,5 +63,59 @@
 (display-newline ((acc 'deposit) 40))
 (display-newline ((acc 'withdraw) 60))
 
+;;; 引进赋值带来的好处
+
+;;; chez scheme 里面有一个过程 (random n) 会返回大于等于 0 小于 n 的数
+
+;;; 线性同余随机发生器
+(define (rand-update x)
+  (let ((m (expt 2 32))
+        (a 1664525)
+        (b 1013904223))
+    (remainder (+ (* a x) b) m)))
+
+(define random-init 12)
+
+; (define rand
+;   (let ((x random-init))
+;     (lambda ()
+;       (set! x (rand-update x))
+;       (remainder x 10000))))
+
+(define (rand) (random 100000))
+
+(display-newline "--- random ----")
+
+(let loop ((i 0))
+  (if (> i 10)
+      'done
+      (begin (display-newline (rand))
+             (loop (+ i 1)))))
+
+;;; 蒙特卡洛方法
+;;; 利用大量随机数据反向估算某个值.
+
+;;; 6/pi^2 是随机选取两个整数没有公共因子的概率, 反过来就可以用这个概率估算 pi.
+
+(define (estimate-pi trials)
+  (sqrt (/ 6 (monte-carlo trials cesaro-test))))
+
+(define (cesaro-test)
+  (= (gcd (rand) (rand)) 1))
+
+(define (monte-carlo trials experiment)
+  (define (iter trials-remaining trials-passed)
+    (cond ((= trials-remaining 0) (/ trials-passed trials))
+          ((experiment)
+           (iter (- trials-remaining 1) (+ trials-passed 1)))
+          (else
+            (iter (- trials-remaining 1) trials-passed))))
+  (iter trials 0))
+
+(display-newline (estimate-pi 1000000))
+; 3.1412338222154714
+
+
+
 (exit)
 
