@@ -115,6 +115,68 @@
 (display-newline (estimate-pi 1000000))
 ; 3.1412338222154714
 
+(display-newline "---------- Queue ------------------")
+
+;;; 队列 Queue
+;;; 一端插入, 另一端删除
+; (define q (make-queue))
+; (insert-queue! q 'a)  ; a
+; (insert-queue! q 'b)  ; a b
+; (delete-queue! q)     ; b
+; (insert-queue! q 'c)  ; b c
+; (insert-queue! q 'd)  ; b c d
+; (delete-queue! q)     ; c d
+
+;;; 队列可以表示为一般的序列, 但这样添加队列就要遍历整个表找到表尾
+;;; 另一个办法是用一个序对, car, cdr 分别指向队列头尾, 头尾操作就都只有 O(1) 的时间复杂度了
+
+(define (front-ptr queue) (car queue))
+(define (rear-ptr queue) (cdr queue))
+(define (set-front-ptr! queue item) (set-car! queue item))
+(define (set-rear-ptr! queue item) (set-cdr! queue item))
+
+(define (empty-queue? queue) (null? (front-ptr queue)))
+
+(define (make-queue) (cons '() '()))
+
+(display-newline (empty-queue? (make-queue)))
+; #t
+
+(define (front-queue queue)
+  (if (empty-queue? queue)
+      (error 'FRONT-QUEUE "FRONT called with an empty queue")
+      (car (front-ptr queue))))
+
+; (display-newline (front-queue (make-queue)))
+; 报错
+
+(define (insert-queue! queue item)
+  (let ((new-pair (cons item '())))
+    (if (empty-queue? queue)
+        (begin (set-front-ptr! queue new-pair)
+               (set-rear-ptr! queue new-pair)
+               queue)
+        (begin (set-cdr! (rear-ptr queue) new-pair)
+               (set-rear-ptr! queue new-pair)
+               queue))))
+
+(define (delete-queue! queue)
+  (if (empty-queue? queue)
+      (error 'DELETE-QUEUE! "DELETE! called with an empty queue")
+      (begin (set-front-ptr! queue (cdr (front-ptr queue)))
+             queue)))
+
+(define q (make-queue))
+(insert-queue! q 'a)
+(display-newline q)
+(insert-queue! q 'b)
+(insert-queue! q 'c)
+(display-newline q)
+(delete-queue! q)
+(display-newline q)
+
+;;; 栈
+;;; 同一端插入删除
 
 
 (exit)
