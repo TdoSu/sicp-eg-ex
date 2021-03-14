@@ -58,5 +58,18 @@
   (add-action! a2 and-action-procedure)
   'ok) 
 
+(define (logical-and v1 v2)
+  (cond ((or (= v1 1) (= v2 1)) 1)
+        ((and (= v1 0) (= v2 0)) 0)
+        (else 'LOGICAL-AND "Invalid signal" (list v1 v2))))
+
+(define (or-gate a1 a2 output)
+  (let ((s1 (make-wire))
+        (s2 (make-wire)))
+    (inverter a1 s1)
+    (inverter a2 s2)
+    (and-gate s1 s2 output)
+    'ok))
+
 (exit)
 
