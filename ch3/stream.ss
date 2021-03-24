@@ -172,5 +172,42 @@
 
 (display-newline (stream-ref double 4))
 
+;;; 用流的方式描述平方根过程
+
+(define (sqrt-stream x)
+  (define (sqrt-improve guess)
+    (average guess (/ x guess)))
+  (define guesses
+    (cons-stream 1.0
+                 (lambda ()
+                   (stream-map (lambda (guess)(sqrt-improve guess))
+                               guesses))))
+  guesses)
+
+(display-newline (stream-ref (sqrt-stream (square 3)) 10))
+
+(define (good-enough? x)
+  (lambda (guess)
+    (< (abs (- x (square guess))) 0.0001)))
+
+(display-newline (stream-ref (stream-filter (good-enough? 2)
+                                            (sqrt-stream 2))
+                             0))
+
+(define (pi-summands n)
+  (cons-stream (/ 1.0 n)
+               (lambda () (stream-map - (pi-summands (+ n 2))))))
+
+; (define pi-stream
+;   (scale-stream (partial-sums (pi-summands 1)) 4))
+
+; (define (display-stream stream)
+;   (if (stream-null? stream)
+;       'done
+;       (begin (display-newline (stream-car stream))
+;              (display-stream (stream-cdr stream)))))
+
+; (display-newline (stream-ref pi-stream 100))
+
 (exit)
 
