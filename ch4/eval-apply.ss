@@ -2,6 +2,9 @@
 
 (display-newline "--------- 元循环求值器 ---------")
 
+(define true #t)
+(define false #f)
+
 ;;; 求值器的内核
 
 ;;; 1. 对于自身求值表达式, 返回表达式本身 -- 数字
@@ -72,13 +75,136 @@
 
 (define (eval-definition expr env)
   (define-variable! (definition-variable expr)
-                    (eval (define-value expr) env)
+                    (eval (definition-value expr) env)
                     env)
   'ok)
 
 
-;;; 表达式的表示
+;;; 表达式的表示 -- 语法
 
+(define (self-evaluating? expr)
+  (cond ((number? expr) true)
+        ((string? expr) true)
+        false))
+
+(define (variable? expr)
+  (symbol? expr))
+
+(define (quoted? expr)
+  (tagged-list? expr 'quote))
+
+(define (text-of-quotation expr) (cadr expr))
+
+(define (tagged-list? expr tag)
+  (if (pair? expr)
+      (eq? (car expr) tag)
+      false))
+
+;;; 赋值 (set! <var> <value>)
+(define (assignment? expr)
+  (tagged-list? expr 'set!))
+
+(define (assignment-variable expr) (cadr expr))
+(define (assignment-value expr) (caddr expr))
+
+;;; 定义 (define <var> <value>)
+
+(define (definition? expr)
+  (tagged-list? expr 'define))
+
+(define (definition-variable expr)
+  (if (symbol? (cadr expr))
+      (cadr expr)
+      ;;; 兼容 (define (<var> <parameter1 ... <parametern>>) <body>)
+      (caadr expr)))
+
+(define (definition-value expr)
+  (if (symbol? (cadr expr))
+      (caddr expr)
+      (make-lambda (cdadr expr)   ; formal parameters
+                   (cddr expr)))) ; body
+
+(define (lambda? expr) (tagged-list? expr 'lambda))
+
+(define (lambda-parameters expr) (cadr expr))
+
+(define (lambda-body expr) (cddr expr))
+
+(define (make-lambda parameters body)
+  (cons 'lambda (cons parameters body)))
+
+(define (if? expr) (tagged-list? expr 'if))
+
+(define (if-predicate expr) (cadr expr))
+
+(define (if-consequent expr) (caddr expr))
+
+(define (if-alternative expr)
+  (if (not (null? (cdddr expr)))
+      (cadddr expr)
+      'false))
+
+(define (make-if predicate consequent alternative)
+  (list 'if consequent alternative))
+
+(define (begin? expr)
+  (tagged-list? expr 'begin))
+
+(define (begin-actions expr) (cdr expr))
+
+(define (last-expr? seq) (null? (cdr seq)))
+
+(define (first-exp seq) (car seq))
+
+(define (rest-exps seq) (cdr seq))
+
+(define (sequence->exp seq)
+  (cond ((null? seq) seq)
+        ((last-expr? seq) (first-exp seq))
+        (else (make-begin seq))))
+
+(define (make-begin seq) (cons 'begin seq))
+
+(define (application? expr) (pair? expr))
+
+(define (operator expr) (car expr))
+
+(define (operands expr) (cdr expr))
+
+(define (no-operands? ops) (null? ops))
+
+(define (first-operand ops) (car ops))
+
+(define (rest-operands ops) (cdr ops))
+
+;;; 派生表达式 用 if 实现 cond
+
+(define (cond? expr) (tagged-list? expr 'cond))
+
+(define (cond-clauses expr) (cdr expr))
+
+(define (cond-else-clause? clause)
+  (eq? (cond-predicate clause) 'else))
+
+(define (cond-predicate clause) (car clause))
+
+(define (cond-actions clause) (cdr clause))
+
+(define (cond->if expr)
+  (expand-clauses (cond-clauses expr)))
+
+(define (expand-clauses clauses)
+  (if (null? clauses)
+      'false                      ; clause else no
+      (let ((first (car clauses))
+            (rest (cdr clauses)))
+        (if (cond-else-clause? first)
+            (if (null? rest)
+                (sequence->exp (cond-actions first))
+                (error 'COND->IF "ELSE clause isn't last" clauses))
+            (make-if (cond-predicate first)
+                     (sequence->exp (cond-actions first))
+                     (expand-clauses rest))))))
 
 (exit)
 
