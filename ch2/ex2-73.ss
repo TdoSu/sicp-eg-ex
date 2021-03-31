@@ -47,7 +47,7 @@
 (define (multiplier p) (cadr p))
 (define (multiplicand p) (caddr p))
 
-;;; 用类型分派的风格改写符号求导
+;;; 用数据导向的风格改写符号求导
 
 (define (deriv expr var)
   (cond ((number? expr) 0)
