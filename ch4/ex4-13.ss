@@ -36,7 +36,7 @@
   (cadr expr))
 
 (define (unbound? expr)
-  (tagged-list? 'unbound! expr))
+  (tagged-list? expr 'unbound!))
 
 ;;; 应该接触当前环境使用的变量定义的绑定
 ;;; 参考 set-variable-value!
