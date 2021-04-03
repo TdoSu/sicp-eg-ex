@@ -20,7 +20,7 @@
 
 (define (eval expr env)
   (cond ((self-evaluating? expr) expr)
-        ((variable? expr) (lookup-variable-value expr nev))
+        ((variable? expr) (lookup-variable-value expr env))
         ((quoted? expr) (text-of-quotation expr))
         ((assignment? expr) (eval-assignment expr env))
         ((definition? expr) (eval-definition expr env))
