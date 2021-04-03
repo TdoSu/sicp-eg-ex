@@ -206,5 +206,103 @@
                      (sequence->exp (cond-actions first))
                      (expand-clauses rest))))))
 
+;;; 求值器的数据结构
+
+;;; 谓词检测
+(define (true? x)
+  (not (eq? x false)))
+(define (false? x)
+  (eq? x false))
+
+;;; 基本过程
+; (apply-primitive-procedure <proc> <args>)
+; (primitive-procedure? <proc>)
+
+;;; 复合过程
+(define (make-procedure parameters body env)
+  (list 'procedure parameters parameters body env))
+(define (compound-procedure? p)
+  (tagged-list? p 'procedure))
+(define (procedure-parameters p) (cadr p))
+(define (procedure-body p) (caddr p))
+(define (procedure-environment p) (cadddr p))
+
+;;; 环境操作
+; (lookup-variable-value <var> <env>)
+; (extend-environment <variables> <values> <baseenv>)
+; (define-variable! <var> <value> <env>)
+; (set-variable-value! <var> <value> <env>)
+
+;;; 将环境实现为框架的表
+
+(define (enclosing-enviroment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-enviroment '())
+
+(define (make-frame variables values)
+  (cons variables values))
+(define (frame-variables frame) (car frame))
+(define (frame-values frame) (cdr frame))
+(define (add-binding-to-frame! var val frame)
+  (set-car! frame (cons var (car frame)))
+  (set-cdr! frame (cons val (cdr frame))))
+
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error 'EXTEND-ENVRIONMENT "Too many arguments supplied" vars vals)
+          (error 'EXTEND-ENVRIONMENT "Too few arguments supplied" vars vals))))
+
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (define (scan vars vals)
+      (cond ((null? vars)
+             ;;; 空框架则查找外部环境
+             (env-loop (enclosing-enviroment env)))
+            ((eq? var (car vars))
+             (car vals))
+            (else (scan (cdr vars) (cdr vals)))))
+    ;;; 空环境则报错
+    (if (eq? env the-empty-enviroment)
+        (error 'LOOKUP-VARIABLE-VALUE "Unbound variable" var)
+        ;;; 取出第一个框架
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
+
+(define (set-variable-value! var val env)
+  (define (env-loop env)
+    (define (scan vars vals)
+      (cond ((null? vars)
+             ;;; 空框架则查找外部环境
+             (env-loop (enclosing-enviroment env)))
+            ((eq? var (car vars))
+             ;;; 这里和 lookup-variable-value 不同 !
+             (set-car! vals val))
+            (else (scan (cdr vars) (cdr vals)))))
+    ;;; 空环境则报错
+    (if (eq? env the-empty-enviroment)
+        (error 'LOOKUP-VARIABLE-VALUE "Unbound variable" var)
+        ;;; 取出第一个框架
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
+
+(define (define-variable! var val env)
+  (let ((frame (first-frame env)))
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (add-binding-to-frame! var val frame))
+            ((eq? var (car vars))
+             (set-car! vals val))
+            (else (scan (cdr vars) (cdr vals)))))
+    (scan (frame-variables)
+          (frame-values frame))))
+
+
+
 (exit)
 
