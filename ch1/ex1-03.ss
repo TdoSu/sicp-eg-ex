@@ -39,6 +39,10 @@
 ; 还可以有一些做法, 比如先求三个数平方, 然后求平方中最大两数和
 ; 或者直接扩展一下, 输入一个 list 排序, 然后求前 n 项平方和
 
+(define (bigger-sum-of-squares a b c)
+  (sum-of-squares (car (reverse (sort (list a b c))))
+                  (cadr (reverse (sort (list a b c))))))
+
 (display-newline (bigger-sum-of-squares 3 4 5))
 ; > 41
 (display-newline (bigger-sum-of-squares 4 4 5))

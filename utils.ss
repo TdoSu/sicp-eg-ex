@@ -5,7 +5,44 @@
              (display " ")
              (apply display-newline (cdr messages)))))
 
-(define (square x) (* x x))
+(define (most-of-numbers p numbers)
+  (cond ((null? numbers) (error 'MOST-OF-NUMBERS "没有参数" numbers))
+        ((null? (cdr numbers)) (car numbers))
+        ((p (car numbers) (most-of-numbers p (cdr numbers))) (car numbers))
+        (else (most-of-numbers p (cdr numbers)))))
+
+(define (max-of-numbers . numbers) (most-of-numbers > numbers))
+
+(define (min-of-numbers . numbers) (most-of-numbers < numbers))
+
+(define (filter pred items)
+  (cond ((null? items) '())
+        ((pred (car items)) (cons (car items) (filter pred (cdr items))))
+        (else (filter pred (cdr items)))))
+
+(define (append items1 items2)
+  (cond ((null? items1) items2)
+        (else (cons (car items1)
+                    (append (cdr items1) items2)))))
+
+(define (reverse items)
+  (if (null? items)
+      '()
+      (append (reverse (cdr items))
+              (list (car items)))))
+
+(define (sort numbers)
+  (if (null? numbers)
+      '()
+      (let ((privot (car numbers)))
+        (let ((rest-numbers (cdr numbers)))
+          (append (sort (filter (lambda (x) (<= x privot))
+                                rest-numbers))
+                  (cons privot
+                        (sort (filter (lambda (x) (> x privot))
+                                      rest-numbers))))))))
+
+;;; ----
 
 (define (average . numbers)
   (if (null? numbers)
