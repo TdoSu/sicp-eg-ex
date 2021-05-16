@@ -1,9 +1,9 @@
-(define (display-newline . msgs)
-  (if (null? msgs)
+(define (display-newline . messages)
+  (if (null? messages)
       (newline)
-      (begin (display (car msgs))
+      (begin (display (car messages))
              (display " ")
-             (apply display-newline (cdr msgs)))))
+             (apply display-newline (cdr messages)))))
 
 (define (square x) (* x x))
 
