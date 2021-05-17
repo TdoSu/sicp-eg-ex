@@ -42,8 +42,6 @@
                         (sort (filter (lambda (x) (> x privot))
                                       rest-numbers))))))))
 
-;;; ----
-
 (define (average . numbers)
   (if (null? numbers)
       0
@@ -65,6 +63,22 @@
   (accumulate items
               (lambda (c r) (+ 1 r))
               0))
+
+(define (square x) (* x x))
+
+(define (sqrt x)
+  (define (improve g)
+    (average g (/ x g)))
+  (define (good-enough? g)
+    (let ((next (improve g)))
+      (< (abs (- (/ g next) 1)) 0.001)))
+  (define (iter guess)
+    (if (good-enough? guess)
+        guess
+        (iter (improve guess))))
+  (iter 1.0))
+
+;;; ----
 
 ;;; (real-time) the amount of real time that has elapsed since system start-up
 ;;; system -- chez scheme
